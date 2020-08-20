@@ -22,7 +22,7 @@ Manage::Manage()
 {
     propertyMaker_[ "READ" ] = []( const QString &type, const QString &name, const QString &value, const QString &, const bool &withSlot, const bool &withInline )->QString
     {
-        return QString( "%1%2%3 %4() const\n{ return %5; }\n" ).
+        return QString( "%1%2%3 %4() const\n{ return %5_; }\n" ).
                 arg( ( withSlot ) ? ( "public: Q_SLOT " ) : ( "" ) ).
                 arg( ( withInline ) ? ( "inline " ) : ( "" ) ).
                 arg( type ).
@@ -32,14 +32,28 @@ Manage::Manage()
 
     propertyMaker_[ "WRITE" ] = []( const QString &type, const QString &name, const QString &value, const QString &notifyValue, const bool &withSlot, const bool &withInline )->QString
     {
-        return QString( "%1%2void %3(const %4 &newValue)\n{ if ( newValue == %5 ) { return; } %6 = newValue;%7 }\n" ).
-                arg( ( withSlot ) ? ( "public: Q_SLOT " ) : ( "" ) ).
-                arg( ( withInline ) ? ( "inline " ) : ( "" ) ).
-                arg( value ).
-                arg( type ).
-                arg( name ).
-                arg( name ).
-                arg( ( notifyValue.isEmpty() ) ? ( "" ) : ( QString( " emit %1( %2 );" ).arg( notifyValue ).arg( name ) ) );
+        if ( type == "qreal" )
+        {
+            return QString( "%1%2void %3(const %4 &newValue)\n{ if ( qAbs( newValue - %5_ ) < 0.00001 ) { return; } %6_ = newValue;%7 }\n" ).
+                    arg( ( withSlot ) ? ( "public: Q_SLOT " ) : ( "" ) ).
+                    arg( ( withInline ) ? ( "inline " ) : ( "" ) ).
+                    arg( value ).
+                    arg( type ).
+                    arg( name ).
+                    arg( name ).
+                    arg( ( notifyValue.isEmpty() ) ? ( "" ) : ( QString( " emit %1( %2_ );" ).arg( notifyValue ).arg( name ) ) );
+        }
+        else
+        {
+            return QString( "%1%2void %3(const %4 &newValue)\n{ if ( newValue == %5_ ) { return; } %6_ = newValue;%7 }\n" ).
+                    arg( ( withSlot ) ? ( "public: Q_SLOT " ) : ( "" ) ).
+                    arg( ( withInline ) ? ( "inline " ) : ( "" ) ).
+                    arg( value ).
+                    arg( type ).
+                    arg( name ).
+                    arg( name ).
+                    arg( ( notifyValue.isEmpty() ) ? ( "" ) : ( QString( " emit %1( %2_ );" ).arg( notifyValue ).arg( name ) ) );
+        }
     };
 
     propertyMaker_[ "NOTIFY" ] = []( const QString &type, const QString &name, const QString &value, const QString &, const bool &, const bool & )->QString
@@ -52,7 +66,7 @@ Manage::Manage()
 
     propertyMaker_[ "RESET" ] = []( const QString &type, const QString &name, const QString &value, const QString &notifyValue, const bool &withSlot, const bool &withInline )->QString
     {
-        return QString( "%1%2void %3() \n{ if ( %4 == %5() ) { return; } %6 = %7();%8 }\n" ).
+        return QString( "%1%2void %3() \n{ if ( %4_ == %5() ) { return; } %6_ = %7();%8 }\n" ).
                 arg( ( withSlot ) ? ( "public: Q_SLOT " ) : ( "" ) ).
                 arg( ( withInline ) ? ( "inline " ) : ( "" ) ).
                 arg( value ).
@@ -60,7 +74,7 @@ Manage::Manage()
                 arg( type ).
                 arg( name ).
                 arg( type ).
-                arg( ( notifyValue.isEmpty() ) ? ( "" ) : ( QString( " emit %1( %2 );" ).arg( notifyValue ).arg( name ) ) );
+                arg( ( notifyValue.isEmpty() ) ? ( "" ) : ( QString( " emit %1( %2_ );" ).arg( notifyValue ).arg( name ) ) );
     };
 }
 
@@ -72,12 +86,15 @@ QString Manage::make(const QString &source, const bool &withSlot, const bool &wi
 
     reply += "// Property code start\n";
 
-    for ( const auto &line_: lines )
+    for ( const auto &rawLine: lines )
     {
-        auto line = line_;
+        auto line = rawLine;
 
         while ( line.startsWith( " " ) ) { line.remove( 0, 1 ); }
         if ( !line.startsWith( "Q_PROPERTY(" ) || !line.endsWith( ")" ) ) { continue; }
+
+        while ( line.startsWith( "Q_PROPERTY( " ) ) { line.remove( 11, 1 ); }
+        while ( line.endsWith( " )" ) ) { line.remove( line.size() - 2, 1 ); }
 
         line.remove( 0, 11 );
         line.remove( line.size() - 1, 1 );
@@ -124,7 +141,22 @@ QString Manage::make(const QString &source, const bool &withSlot, const bool &wi
             flag = true;
         }
 
-        reply += QString( "private: %1 %2;\n" ).arg( type ).arg( name );
+        if ( type == "qreal" )
+        {
+            reply += QString( "private: %1 %2_ = 0.0;\n" ).arg( type ).arg( name );
+        }
+        else if ( type == "int" )
+        {
+            reply += QString( "private: %1 %2_ = 0;\n" ).arg( type ).arg( name );
+        }
+        else if ( type == "bool" )
+        {
+            reply += QString( "private: %1 %2_ = false;\n" ).arg( type ).arg( name );
+        }
+        else
+        {
+            reply += QString( "private: %1 %2_;\n" ).arg( type ).arg( name );
+        }
 
         for ( const auto &data: datas )
         {

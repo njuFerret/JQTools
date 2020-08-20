@@ -40,93 +40,41 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QMessageLogContext>
 #include <QMap>
 #include <QVector>
 #include <QSize>
 #include <QMutex>
+#include <QTimer>
+#include <QDateTime>
+#include <QDebug>
+#include <QThreadPool>
 
-class QTableWidget;
-class QTreeWidget;
-class QTextEdit;
-class QLineEdit;
-class QTimer;
+// JQLibrary lib import
+#include <JQDeclare>
 
-// Macro define
-#define PropertyDeclare(Type, name, setName, ...)                                           \
-    private:                                                                                \
-    Type name ## _ __VA_ARGS__;                                                             \
-    public:                                                                                 \
-    inline const Type &name() const { return name ## _; }                                   \
-    inline void setName(const Type &name) { name ## _ = name; }                             \
-    private:
+enum JQDebugEnum
+{
+    JQDebugUnknown,
 
-#define PropertyDeclareWithSlot(Type, name, setName, ...)                                   \
-    private:                                                                                \
-    Type name ## _ __VA_ARGS__;                                                             \
-    public Q_SLOTS:                                                                         \
-    Type name() const { return name ## _; }                                                 \
-    void setName(const Type &name) { name ## _ = name; }                                    \
-    private:
+    JQDebugForceConsoleMode,
+    JQDebugReset,
 
-#define PtrPropertyDeclare(Type, name, setName, ...)                                        \
-    private:                                                                                \
-    Type *name ## _ __VA_ARGS__;                                                            \
-    public:                                                                                 \
-    inline const Type *name() const                                                         \
-        { return name ## _; }                                                               \
-    inline void setName(const Type &name)                                                   \
-        { if ( name ## _ ) { delete name ## _; }                                            \
-        name ## _ = new Type( name ); }                                                     \
-    private:
-
-#define RUNONOUTRANGEHELPER2( x, y ) x ## y
-#define RUNONOUTRANGEHELPER( x, y ) RUNONOUTRANGEHELPER2( x, y )
-#define RUNONOUTRANGE( ... )                                                                \
-    auto RUNONOUTRANGEHELPER( runOnOutRangeCallback, __LINE__ ) = __VA_ARGS__;              \
-    QSharedPointer< int > RUNONOUTRANGEHELPER( runOnOutRange, __LINE__ )(                   \
-        new int,                                                                            \
-        [ RUNONOUTRANGEHELPER( runOnOutRangeCallback, __LINE__ ) ](int *data)               \
-    {                                                                                       \
-        RUNONOUTRANGEHELPER( runOnOutRangeCallback, __LINE__ )();                           \
-        delete data;                                                                        \
-    } );                                                                                    \
-    if ( RUNONOUTRANGEHELPER( runOnOutRange, __LINE__ ).data() == nullptr ) { exit( -1 ); }
-
-#define rforeach (variable, container)                                                      \
-for (RforeachContainer<__typeof__((container))> _container_((container));                   \
-    _container_.__howMuch__; _container_.__howMuch__--)                                     \
-    for (variable = *(--_container_.__now__); ; __extension__ ({ break;}))
-
-#define JQCONST( property ) \
-    static_cast< const decltype( property ) >( property )
-
-#define JQBUILDDATETIMESTRING                                                                               \
-    ( QDateTime(                                                                                            \
-        QLocale( QLocale::English ).toDate( QString( __DATE__ ).replace( "  ", " 0" ), "MMM dd yyyy"),      \
-        QTime::fromString( __TIME__, "hh:mm:ss" )                                                           \
-    ).toString( "yyyy-MM-dd hh:mm:ss" ).toLatin1().data() )
-
-template < typename T >
-class RforeachContainer {
-public:
-    inline RforeachContainer(const T& t) : __now__(t.end()), __howMuch__(t.size()) { }
-    typename T::const_iterator __now__;
-    int __howMuch__;
+    JQDebugBlue,
+    JQDebugGreen,
+    JQDebugRed,
+    JQDebugYellow,
+    JQDebugPurple,
+    JQDebugCyan,
+    JQDebugBlack,
+    JQDebugWhite,
 };
 
-template < typename T >
-inline typename std::enable_if< !std::is_pod< T >::value >::type
-memset( T*, int, size_t )
-{
-    static_assert( std::is_pod< T >::value, "memset error: target not pod" );
-}
+QDebug operator<<(QDebug dbg, const QPair< QDateTime, QDateTime > &data);
 
-template < typename T >
-inline typename std::enable_if< !std::is_pod< T >::value >::type
-memcpy( T*, int, size_t )
-{
-    static_assert( std::is_pod< T >::value, "memcpy error: target not pod" );
-}
+QDebug operator<<(QDebug dbg, const JQDebugEnum &debugConfig);
+
+std::ostream &operator<<(std::ostream &dbg, const JQDebugEnum &debugConfig);
 
 namespace JQFoundation
 {
@@ -160,21 +108,45 @@ QVariantList listKeyTranslate(const QVariantList &source, const QMap< QString, Q
 
 QList< QVariantMap > listKeyTranslate(const QList< QVariantMap > &source, const QMap< QString, QString > &keyMap);
 
-QSharedPointer< QTimer > setTimerCallback(const int &interval, const std::function< void(bool &continueFlag) > &callback, const bool &callbackOnStart = false);
+QSharedPointer< QTimer > JQLIBRARY_EXPORT setTimerCallback(
+        const int &interval,
+        const std::function< void(bool &continueFlag) > &callback,
+        const bool &callbackOnStart = false
+    );
 
-void setDebugOutput(const QString &targetFilePath, const bool &argDateFlag = false);
+#if ( defined QT_CONCURRENT_LIB ) && ( QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 ) )
+void JQLIBRARY_EXPORT setTimerCallback(
+        const QDateTime &dateTime,
+        const std::function< void() > &callback,
+        const QSharedPointer< QThreadPool > &threadPool = nullptr
+    );
+
+void JQLIBRARY_EXPORT setTimerCallback(
+        const std::function< QDateTime() > &nextTime,
+        const std::function< void() > &callback,
+        const QSharedPointer< QThreadPool > &threadPool = nullptr
+    );
+#endif
+
+void JQLIBRARY_EXPORT setDebugOutput(
+        const QString &targetFilePath,
+        const bool &argDateFlag = false,
+        const std::function< void(const QMessageLogContext &context, const QString &) > &warningMessageCallback = nullptr
+    );
 
 void openDebugConsole();
 
-bool singleApplication(const QString &flag);
+bool JQLIBRARY_EXPORT singleApplication(const QString &flag);
 
-bool singleApplicationExist(const QString &flag);
+bool JQLIBRARY_EXPORT singleApplicationExist(const QString &flag);
 
 QByteArray pixmapToByteArray(const QPixmap &pixmap, const QString &format, int quality = -1);
 
 QByteArray imageToByteArray(const QImage &image, const QString &format, int quality = -1);
 
 QString snakeCaseToCamelCase(const QString &source, const bool &firstCharUpper = false);
+
+int rectOverflow(const QSize &frameSize, const QRect &rect, const int &redundancy = 0);
 
 QRect scaleRect(const QRect &rect, const qreal &scale);
 
@@ -184,10 +156,30 @@ QPoint scalePoint(const QPoint &point, const qreal &horizontalScale, const qreal
 
 QPointF scalePoint(const QPointF &point, const qreal &horizontalScale, const qreal &verticalScale);
 
+QPoint pointFToPoint(const QPointF &point, const QSize &size);
+
+QPointF pointToPointF(const QPoint &point, const QSize &size);
+
+QLine pointFToLine(const QPointF &point1, const QPointF &point2, const QSize &size);
+
+QRect rectFToRect(const QRectF &rect, const QSize &size);
+
+QRectF rectToRectF(const QRect &rect, const QSize &size);
+
+QLine lineFToLine(const QLineF &line, const QSize &size);
+
+QRect cropRect(const QRect &rect, const QRect &bigRect);
+
 QImage imageCopy(const QImage &image, const QRect &rect);
 
+QImage removeImageColor(const QImage &image, const QColor &color);
+
+QList< QPair< QDateTime, QDateTime > > extractTimeRange(const QDateTime &startTime, const QDateTime &endTime, const qint64 &interval);
+
+void waitFor(const std::function< bool() > &predicate, const int &timeout);
+
 #if ( ( defined Q_OS_MAC ) && !( defined Q_OS_IOS ) ) || ( defined Q_OS_WIN ) || ( defined Q_OS_LINUX )
-QPair< int, QByteArray > startProcessAndReadOutput(const QString &program, const QStringList &arguments, const int &maximumTime = 5 * 1000);
+QPair< int, QByteArray > JQLIBRARY_EXPORT startProcessAndReadOutput(const QString &program, const QStringList &arguments, const int &maximumTime = 5 * 1000);
 #endif
 
 template< class Key, class T >
@@ -242,25 +234,45 @@ inline bool operator <(const QSize &a, const QSize &b)
     return a.height() < b.height();
 }
 
-class JQTickCounter
+class JQLIBRARY_EXPORT JQTickCounter
 {
 public:
-    explicit JQTickCounter(const qint64 &timeRange = 2 * 1000);
+    explicit JQTickCounter(const qint64 &timeRange = 5 * 1000); // 此变量影响tick计算精准度，可能会导致tick值不可靠，若非必要请勿修改
 
     ~JQTickCounter() = default;
 
 public:
-    void tick();
+    void tick(const int &count = 1);
 
     qreal tickPerSecond();
 
+    QString tickPerSecondDisplayString();
+
 private:
     qint64 timeRange_;
-    QVector< qint64 > tickRecord_;
+    QList< qint64 > tickRecord_;
     QSharedPointer< QMutex > mutex_;
 };
 
-class JQMemoryPool
+class JQLIBRARY_EXPORT JQFpsControl
+{
+public:
+    JQFpsControl(const qreal &fps = 15);
+
+    ~JQFpsControl() = default;
+
+    void setFps(const qreal &fps);
+
+    void waitNextFrame();
+
+    bool readyNextFrame();
+
+private:
+    qreal fps_;
+    qint64 lastTriggeredTime_ = 0;
+};
+
+class JQLIBRARY_EXPORT JQMemoryPool
 {
 private:
     struct JQMemoryPoolNodeHead
@@ -278,9 +290,13 @@ private:
 public:
     ~JQMemoryPool() = default;
 
-    static void initReleaseThreshold();
+    static void initReleaseThreshold(const qreal &percentage = 0.2);
+
+    static qint64 realTotalMallocSize();
 
     static qint64 totalMallocSize();
+
+    static qint64 totalMallocCount();
 
     static void *requestMemory(const size_t &requestSize);
 
@@ -293,7 +309,9 @@ private:
     static QMutex mutex_;
     static QMap< size_t, QVector< JQMemoryPoolNodeHead > > nodeMap_;
 
+    static QAtomicInteger< qint64 > realTotalMallocSize_;
     static QAtomicInteger< qint64 > totalMallocSize_;
+    static QAtomicInteger< qint64 > totalMallocCount_;
     static qint64 releaseThreshold_;
 };
 

@@ -195,8 +195,7 @@ Item {
             y: 223
             width: 120
             height: 40
-            text: "Windows(ico)"
-            enabled: false
+            text: "Windows(png)"
 
             onClicked: {
                 materialUI.showLoading();
@@ -238,6 +237,24 @@ Item {
                 materialUI.showLoading();
 
                 var reply = iconMakerManage.makeAndroid();
+
+                iconMaker.makeReplyProcessor( reply );
+
+                materialUI.hideLoading();
+            }
+        }
+
+        MaterialButton {
+            x: 476
+            y: 382
+            width: 120
+            height: 40
+            text: "PWA(png)"
+
+            onClicked: {
+                materialUI.showLoading();
+
+                var reply = iconMakerManage.makePWA();
 
                 iconMaker.makeReplyProcessor( reply );
 

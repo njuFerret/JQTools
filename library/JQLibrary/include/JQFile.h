@@ -25,11 +25,15 @@
 #include <QByteArray>
 #include <QPair>
 #include <QDir>
+#include <QCryptographicHash>
+
+// JQLibrary lib import
+#include <JQDeclare>
 
 class QFileInfo;
 class QDir;
 
-class JQFile
+class JQLIBRARY_EXPORT JQFile
 {
 public:
     static void foreachFileFromDirectory(const QDir &directory, const std::function<void(const QFileInfo &)> &each, const bool &recursion = false);
@@ -38,11 +42,27 @@ public:
 
     static void foreachDirectoryFromDirectory(const QDir &directory, const std::function<void(const QDir &)> &each, const bool &recursion = false);
 
+    static QString tempFilePath(const QString &fileName);
+
     static bool writeFile(const QFileInfo &targetFilePath, const QByteArray &data, const bool &cover = true);
+
+    static bool writeFileToDesktop(const QString &fileName, const QByteArray &data, const bool &cover = true);
+
+    static bool writeFileToTemp(const QString &fileName, const QByteArray &data, const bool &cover = true);
+
+    static bool appendFile(const QFileInfo &targetFilePath, const QByteArray &data);
 
     static QPair< bool, QByteArray > readFile(const QFileInfo &filePath);
 
+    static QPair< bool, QByteArray > readFileFromDesktop(const QString &fileName);
+
+    static QPair< bool, QByteArray > readFileFromTemp(const QString &fileName);
+
     static bool copyFile(const QFileInfo &sourceFileInfo, const QFileInfo &targetFileInfo, const bool &cover = true);
+
+    static bool copyFileToTemp(const QFileInfo &sourceFileInfo, const QString &fileName);
+
+    static QPair< bool, QString > copyFileToTemp(const QFileInfo &sourceFileInfo, const QCryptographicHash::Algorithm &fileNameHashAlgorithm = QCryptographicHash::Sha1, const QString &salt = "");
 
     static bool copyDirectory(const QDir &sourceDirectory, const QDir &targetDirectory, const bool &cover = true);
 

@@ -40,11 +40,120 @@
 #include <QTextStream>
 #include <QMutex>
 #include <QThread>
+#include <QThreadPool>
+
+#ifdef QT_CONCURRENT_LIB
+#   include <QtConcurrent>
+#endif
 
 // Windows lib import
 #ifdef Q_OS_WIN
 #   include <Windows.h>
 #endif
+
+QDebug operator<<(QDebug dbg, const QPair< QDateTime, QDateTime > &data)
+{
+    return ( dbg <<
+             "(" <<
+             data.first.toString( "yyyy-MM-dd hh:mm:ss.zzz" ).toLatin1().data() <<
+             "~" <<
+             data.second.toString( "yyyy-MM-dd hh:mm:ss.zzz" ).toLatin1().data() ) <<
+             ")";
+}
+
+QDebug operator<<(QDebug dbg, const JQDebugEnum &debugConfig)
+{
+#ifdef Q_OS_WIN
+    static bool runOnWindowsConsole = QProcess::systemEnvironment().contains( "SESSIONNAME=Console" );
+
+    if ( debugConfig == JQDebugForceConsoleMode )
+    {
+        runOnWindowsConsole = true;
+    }
+
+    if ( runOnWindowsConsole )
+    {
+        switch ( debugConfig )
+        {
+            case JQDebugReset: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 7 ); break; }
+            case JQDebugBlue: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_BLUE ); break; }
+            case JQDebugGreen: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_GREEN ); break; }
+            case JQDebugRed: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_RED ); break; }
+            case JQDebugYellow: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 14 ); break; }
+            case JQDebugPurple: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 5 ); break; }
+            case JQDebugCyan: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 3 ); break; }
+            case JQDebugBlack: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 0 ); break; }
+            case JQDebugWhite: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 15 ); break; }
+            default: { break; }
+        }
+
+        return dbg;
+    }
+    else
+#endif
+    {
+        switch ( debugConfig )
+        {
+            case JQDebugReset: { return dbg << "\033[0m"; }
+            case JQDebugBlue: { return dbg << "\033[34m"; }
+            case JQDebugGreen: { return dbg << "\033[32m"; }
+            case JQDebugRed: { return dbg << "\033[31m"; }
+            case JQDebugYellow: { return dbg << "\033[33m"; }
+            case JQDebugPurple: { return dbg << "\033[35m"; }
+            case JQDebugCyan: { return dbg << "\033[36m"; }
+            case JQDebugBlack: { return dbg << "\033[30m"; }
+            case JQDebugWhite: { return dbg << "\033[37m"; }
+            default: { return dbg; }
+        }
+    }
+}
+
+std::ostream &operator<<(std::ostream &dbg, const JQDebugEnum &debugConfig)
+{
+#ifdef Q_OS_WIN
+    static bool runOnWindowsConsole = QProcess::systemEnvironment().contains( "SESSIONNAME=Console" );
+
+    if ( debugConfig == JQDebugForceConsoleMode )
+    {
+        runOnWindowsConsole = true;
+    }
+
+    if ( runOnWindowsConsole )
+    {
+        switch ( debugConfig )
+        {
+            case JQDebugReset: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 7 ); break; }
+            case JQDebugBlue: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_BLUE ); break; }
+            case JQDebugGreen: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_GREEN ); break; }
+            case JQDebugRed: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_RED ); break; }
+            case JQDebugYellow: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 14 ); break; }
+            case JQDebugPurple: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 5 ); break; }
+            case JQDebugCyan: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 3 ); break; }
+            case JQDebugBlack: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 0 ); break; }
+            case JQDebugWhite: { SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 15 ); break; }
+            default: { break; }
+        }
+
+        return dbg;
+    }
+    else
+#endif
+    {
+        switch ( debugConfig )
+        {
+            case JQDebugReset: { return dbg << "\033[0m"; }
+            case JQDebugBlue: { return dbg << "\033[34m"; }
+            case JQDebugGreen: { return dbg << "\033[32m"; }
+            case JQDebugRed: { return dbg << "\033[31m"; }
+            case JQDebugYellow: { return dbg << "\033[33m"; }
+            case JQDebugPurple: { return dbg << "\033[35m"; }
+            case JQDebugCyan: { return dbg << "\033[36m"; }
+            case JQDebugBlack: { return dbg << "\033[30m"; }
+            case JQDebugWhite: { return dbg << "\033[37m"; }
+            default: { return dbg; }
+        }
+    }
+}
 
 QString JQFoundation::hashString(const QByteArray &key, const QCryptographicHash::Algorithm &algorithm)
 {
@@ -252,7 +361,11 @@ QList< QVariantMap > JQFoundation::listKeyTranslate(const QList< QVariantMap > &
     return result;
 }
 
-QSharedPointer< QTimer > JQFoundation::setTimerCallback(const int &interval, const std::function<void (bool &continueFlag)> &callback, const bool &callbackOnStart)
+QSharedPointer< QTimer > JQFoundation::setTimerCallback(
+        const int &interval,
+        const std::function<void (bool &continueFlag)> &callback,
+        const bool &callbackOnStart
+    )
 {
     QSharedPointer< QTimer > timer( new QTimer );
 
@@ -286,10 +399,81 @@ QSharedPointer< QTimer > JQFoundation::setTimerCallback(const int &interval, con
     return timer;
 }
 
-void JQFoundation::setDebugOutput(const QString &rawTargetFilePath_, const bool &argDateFlag_)
+#if ( defined QT_CONCURRENT_LIB ) && ( QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 ) )
+void JQFoundation::setTimerCallback(
+        const QDateTime &dateTime,
+        const std::function<void ()> &callback,
+        const QSharedPointer< QThreadPool > &threadPool
+    )
+{
+    const auto &&currentDateTime = QDateTime::currentDateTime();
+    auto workThread = [ = ]()
+    {
+        QSharedPointer< QThreadPool > targetThreadPool;
+        if ( threadPool )
+        {
+            targetThreadPool = threadPool;
+        }
+        else
+        {
+            targetThreadPool.reset( new QThreadPool );
+        }
+
+        QtConcurrent::run( targetThreadPool.data(), [ = ]()
+        {
+            const auto &&timeDiff = QDateTime::currentDateTime().msecsTo( dateTime );
+            if ( timeDiff > 0 )
+            {
+                QThread::msleep( static_cast< unsigned long >( timeDiff ) );
+            }
+
+            while ( QDateTime::currentDateTime() < dateTime )
+            {
+                QThread::msleep( 10 );
+            }
+
+            callback();
+        } );
+    };
+
+    if ( currentDateTime.secsTo( dateTime ) < 3 )
+    {
+        workThread();
+    }
+    else
+    {
+        QMetaObject::invokeMethod( qApp, [ = ]()
+        {
+            QTimer::singleShot( ( currentDateTime.secsTo( dateTime ) - 3 ) * 1000, workThread );
+        } );
+    }
+}
+
+void JQFoundation::setTimerCallback(
+        const std::function< QDateTime() > &nextTime,
+        const std::function<void ()> &callback,
+        const QSharedPointer< QThreadPool > &threadPool
+    )
+{
+    setTimerCallback( nextTime(), [ = ]()
+    {
+        callback();
+
+        setTimerCallback( nextTime, callback, threadPool );
+    }, threadPool );
+}
+#endif
+
+void JQFoundation::setDebugOutput(
+        const QString &rawTargetFilePath_,
+        const bool &argDateFlag_,
+        const std::function< void(const QMessageLogContext &context, const QString &) > &warningMessageCallback_
+    )
 {
     static QString rawTargetFilePath;
     static bool argDateFlag;
+    static const QtMessageHandler QT_DEFAULT_MESSAGE_HANDLER = qInstallMessageHandler( nullptr );
+    static std::function< void(const QMessageLogContext &, const QString &) > warningMessageCallback = warningMessageCallback_;
 
     rawTargetFilePath = rawTargetFilePath_;
     argDateFlag = argDateFlag_;
@@ -297,7 +481,7 @@ void JQFoundation::setDebugOutput(const QString &rawTargetFilePath_, const bool 
     class HelperClass
     {
     public:
-        static void messageHandler(QtMsgType type, const QMessageLogContext &, const QString &message_)
+        static void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &rawMessage)
         {
             QString message;
 
@@ -305,25 +489,25 @@ void JQFoundation::setDebugOutput(const QString &rawTargetFilePath_, const bool 
             {
                 case QtDebugMsg:
                 {
-                    message = message_;
+                    message = rawMessage;
                     break;
                 }
                 case QtWarningMsg:
                 {
                     message.append( "Warning: " );
-                    message.append( message_ );
+                    message.append( rawMessage );
                     break;
                 }
                 case QtCriticalMsg:
                 {
                     message.append( "Critical: " );
-                    message.append( message_ );
+                    message.append( rawMessage );
                     break;
                 }
                 case QtFatalMsg:
                 {
                     message.append( "Fatal: " );
-                    message.append( message_ );
+                    message.append( rawMessage );
                     break;
                 }
                 default: { break; }
@@ -345,11 +529,18 @@ void JQFoundation::setDebugOutput(const QString &rawTargetFilePath_, const bool 
                 QDir().mkpath( QFileInfo( currentTargetFilePath ).path() );
             }
 
+            ( *QT_DEFAULT_MESSAGE_HANDLER )( type, context, rawMessage );
+
             QFile file( currentTargetFilePath );
             file.open( QIODevice::WriteOnly | QIODevice::Append );
 
             QTextStream textStream( &file );
             textStream << QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss" ) << ": " << message << endl;
+
+            if ( warningMessageCallback && ( type == QtWarningMsg ) )
+            {
+                warningMessageCallback( context, rawMessage );
+            }
         }
     };
 
@@ -408,18 +599,16 @@ void JQFoundation::openDebugConsole()
 #if !(defined Q_OS_IOS) && !(defined Q_OS_ANDROID) && !(defined Q_OS_WINPHONE)
 bool JQFoundation::singleApplication(const QString &flag)
 {
-    static QSharedMemory *shareMem = nullptr;
+    static QMap< QString, QSharedMemory * > shareMemSet;
 
-    if (shareMem)
-    {
-        return true;
-    }
+    auto &shareMem = shareMemSet[ flag ];
+    if ( shareMem ) { return true; }
 
-    shareMem = new QSharedMemory( "JQFoundationSingleApplication_" + flag );
+    shareMem = new QSharedMemory( flag );
 
     for ( auto count = 0; count < 2; ++count )
     {
-        if (shareMem->attach( QSharedMemory::ReadOnly ))
+        if ( shareMem->attach( QSharedMemory::ReadOnly ) )
         {
             shareMem->detach();
         }
@@ -429,6 +618,9 @@ bool JQFoundation::singleApplication(const QString &flag)
     {
         return true;
     }
+
+    delete shareMem;
+    shareMem = nullptr;
 
     return false;
 }
@@ -442,7 +634,7 @@ bool JQFoundation::singleApplication(const QString &)
 #if !(defined Q_OS_IOS) && !(defined Q_OS_ANDROID) && !(defined Q_OS_WINPHONE)
 bool JQFoundation::singleApplicationExist(const QString &flag)
 {
-    QSharedMemory shareMem( "JQFoundationSingleApplication_" + flag );
+    QSharedMemory shareMem( flag );
 
     for ( auto count = 0; count < 2; ++count )
     {
@@ -568,6 +760,30 @@ QString JQFoundation::snakeCaseToCamelCase(const QString &source, const bool &fi
     return result;
 }
 
+int JQFoundation::rectOverflow(const QSize &frameSize, const QRect &rect, const int &redundancy)
+{
+    if ( redundancy != 0 )
+    {
+        return rectOverflow(
+                    {
+                        frameSize.width() + redundancy,
+                        frameSize.height() + redundancy
+                    },
+                    {
+                        rect.x() + redundancy,
+                        rect.y() + redundancy,
+                        rect.width(),
+                        rect.height()
+                    },
+                    0
+                );
+    }
+
+    const auto &&unitedRect = QRect( QPoint( 0, 0 ), frameSize ).united( rect );
+
+    return qMax( unitedRect.width() - frameSize.width(), unitedRect.height() - frameSize.height() );
+}
+
 QRect JQFoundation::scaleRect(const QRect &rect, const qreal &scale)
 {
     return scaleRect( rect, scale, scale );
@@ -599,13 +815,81 @@ QPointF JQFoundation::scalePoint(const QPointF &point, const qreal &horizontalSc
     };
 }
 
+QPoint JQFoundation::pointFToPoint(const QPointF &point, const QSize &size)
+{
+    return {
+        static_cast< int >( point.x() * size.width() ),
+        static_cast< int >( point.y() * size.height() )
+    };
+}
+
+QPointF JQFoundation::pointToPointF(const QPoint &point, const QSize &size)
+{
+    return {
+        static_cast< qreal >( point.x() ) / size.width(),
+        static_cast< qreal >( point.y() ) / size.height()
+    };
+}
+
+QLine JQFoundation::pointFToLine(const QPointF &point1, const QPointF &point2, const QSize &size)
+{
+    return {
+        JQFoundation::pointFToPoint( point1, size ),
+        JQFoundation::pointFToPoint( point2, size )
+    };
+}
+
+QRect JQFoundation::rectFToRect(const QRectF &rect, const QSize &size)
+{
+    return {
+        static_cast< int >( rect.x() * size.width() ),
+        static_cast< int >( rect.y() * size.height() ),
+        static_cast< int >( rect.width() * size.width() ),
+        static_cast< int >( rect.height() * size.height() )
+    };
+}
+
+QRectF JQFoundation::rectToRectF(const QRect &rect, const QSize &size)
+{
+    return {
+        static_cast< qreal >( rect.x() ) / size.width(),
+        static_cast< qreal >( rect.y() ) / size.height(),
+        static_cast< qreal >( rect.width() ) / size.width(),
+        static_cast< qreal >( rect.height() ) / size.height()
+    };
+}
+
+QLine JQFoundation::lineFToLine(const QLineF &line, const QSize &size)
+{
+    return {
+        static_cast< int >( line.x1() * size.width() ),
+        static_cast< int >( line.y1() * size.height() ),
+        static_cast< int >( line.x2() * size.width() ),
+        static_cast< int >( line.y2() * size.height() )
+    };
+}
+
+QRect JQFoundation::cropRect(const QRect &rect, const QRect &bigRect)
+{
+    return {
+                QPoint(
+                    ( ( rect.x() < bigRect.x() ) ? ( bigRect.x() ) : ( rect.x() ) ),
+                    ( ( rect.y() < bigRect.y() ) ? ( bigRect.y() ) : ( rect.y() ) )
+                ),
+                QPoint(
+                    ( ( rect.bottomRight().x() > bigRect.bottomRight().x() ) ? ( bigRect.bottomRight().x() ) : ( rect.bottomRight().x() ) ),
+                    ( ( rect.bottomRight().y() > bigRect.bottomRight().y() ) ? ( bigRect.bottomRight().y() ) : ( rect.bottomRight().y() ) )
+                )
+    };
+}
+
 QImage JQFoundation::imageCopy(const QImage &image, const QRect &rect)
 {
     const auto &&unitedRect = QRect( 0, 0, image.width(), image.height() ).united( rect );
 
     if ( ( unitedRect.width() > image.width() ) || ( unitedRect.height() > image.height() ) )
     {
-        qDebug() << "JQFoundation::imageCopy: error:" << image.size() << rect << unitedRect;
+        qDebug() << "JQFoundation::imageCopy: error: input:" << image.size() << ", rect:" << rect << ", unitedRect:" << unitedRect;
         return { };
     }
 
@@ -641,6 +925,87 @@ QImage JQFoundation::imageCopy(const QImage &image, const QRect &rect)
     return result;
 }
 
+QImage JQFoundation::removeImageColor(const QImage &image, const QColor &color)
+{
+    if ( image.format() != QImage::Format_RGB888 )
+    {
+        qDebug() << "JQFoundation::removeImageColor: not support formath:" << image;
+        return { };
+    }
+
+    auto rgbData = JQMemoryPool::requestMemory( static_cast< size_t >( image.width() * image.height() * 4 ) );
+    QImage result(
+                reinterpret_cast< unsigned char * >( rgbData ),
+                image.width(),
+                image.height(),
+                image.width() * 4,
+                QImage::Format_ARGB32,
+                JQMemoryPool::recoverMemory,
+                rgbData
+                );
+
+    auto current = reinterpret_cast< const quint8 * >( image.bits() );
+    auto end = reinterpret_cast< const quint8 * >( current + image.width() * image.height() * 3 );
+    auto target = reinterpret_cast< quint8 * >( rgbData );
+    const auto alphaKey = static_cast< quint32 >( color.red() << 16 | color.green() << 8 | color.blue() );
+
+    for ( ; current < end; current += 3, target += 4 )
+    {
+        if ( ( *reinterpret_cast< const quint32 * >( current ) & 0xffffff ) == alphaKey )
+        {
+            *( target + 0 ) = 0x00;
+            *( target + 1 ) = 0x00;
+            *( target + 2 ) = 0x00;
+            *( target + 3 ) = 0x00;
+        }
+        else
+        {
+            *( target + 3 ) = 0xff;
+            *( target + 2 ) = *( current + 0 );
+            *( target + 1 ) = *( current + 1 );
+            *( target + 0 ) = *( current + 2 );
+        }
+    }
+
+    return result;
+}
+
+QList< QPair< QDateTime, QDateTime > > JQFoundation::extractTimeRange(const QDateTime &startTime, const QDateTime &endTime, const qint64 &interval)
+{
+    if ( interval <= 0 )
+    {
+        return { { startTime, endTime } };
+    }
+
+    const auto &&dayStartTime = QDateTime( startTime.date(), QTime( 0, 0, 0 ) );
+    auto currentTime = startTime.addMSecs( -1 * ( ( startTime.toMSecsSinceEpoch() - dayStartTime.toMSecsSinceEpoch() ) % interval ) );
+
+    QList< QPair< QDateTime, QDateTime > > result;
+
+    while ( currentTime < endTime )
+    {
+        result.push_back( { currentTime, currentTime.addMSecs( interval ) } );
+        currentTime = currentTime.addMSecs( interval );
+
+        if ( result.size() >= 1000 )
+        {
+            qDebug() << "extractTimeRange: result size limit: 1000";
+            break;
+        }
+    }
+
+    return result;
+}
+
+void JQFoundation::waitFor(const std::function< bool() > &predicate, const int &timeout)
+{
+    for ( auto current = 0; current < timeout; current += 25 )
+    {
+        if ( !predicate() ) { break; }
+        QThread::msleep( 25 );
+    }
+}
+
 #if ( ( defined Q_OS_MAC ) && !( defined Q_OS_IOS ) ) || ( defined Q_OS_WIN ) || ( defined Q_OS_LINUX )
 QPair< int, QByteArray > JQFoundation::startProcessAndReadOutput(const QString &program, const QStringList &arguments, const int &maximumTime)
 {
@@ -651,7 +1016,7 @@ QPair< int, QByteArray > JQFoundation::startProcessAndReadOutput(const QString &
     process.setArguments( arguments );
     process.start();
 
-    QObject::connect( &process, static_cast< void(QProcess::*)(int) >( &QProcess::finished ), [ &reply ](const int &exitCode)
+    QObject::connect( &process, static_cast< void(QProcess::*)(int, QProcess::ExitStatus exitStatus) >( &QProcess::finished ), [ &reply ](const int &exitCode)
     {
         reply.first = exitCode;
     } );
@@ -671,7 +1036,7 @@ JQTickCounter::JQTickCounter(const qint64 &timeRange):
     mutex_( new QMutex )
 { }
 
-void JQTickCounter::tick()
+void JQTickCounter::tick(const int &count)
 {
     mutex_->lock();
 
@@ -682,7 +1047,10 @@ void JQTickCounter::tick()
         tickRecord_.pop_front();
     }
 
-    tickRecord_.push_back( currentMSecsSinceEpoch );
+    for ( auto index = 0; index < count; ++index )
+    {
+        tickRecord_.push_back( currentMSecsSinceEpoch );
+    }
 
     mutex_->unlock();
 }
@@ -710,25 +1078,95 @@ qreal JQTickCounter::tickPerSecond()
     return result;
 }
 
+QString JQTickCounter::tickPerSecondDisplayString()
+{
+    return QString::number( tickPerSecond(), 'f', 1 );
+}
+
+// AtcityFpsControl
+JQFpsControl::JQFpsControl(const qreal &fps):
+    fps_( fps )
+{ }
+
+void JQFpsControl::setFps(const qreal &fps)
+{
+    fps_ = fps;
+}
+
+void JQFpsControl::waitNextFrame()
+{
+    const auto &&currentMSecsSinceEpoch = QDateTime::currentMSecsSinceEpoch();
+    const int timeInterval = qMax( 1, static_cast< int >( 1000.0 / fps_ ) );
+    qint64 nextFrameTime = 0;
+
+    if ( currentMSecsSinceEpoch % timeInterval )
+    {
+        nextFrameTime = ( currentMSecsSinceEpoch / timeInterval + 1 ) * timeInterval;
+    }
+    else
+    {
+        nextFrameTime = currentMSecsSinceEpoch;
+    }
+
+    if ( nextFrameTime == lastTriggeredTime_ )
+    {
+        nextFrameTime += timeInterval;
+    }
+
+    const auto readyToMSleep = qBound( 0, static_cast< int >( nextFrameTime - currentMSecsSinceEpoch ), 1000 );
+    if ( readyToMSleep > 0 )
+    {
+        QThread::msleep( static_cast< unsigned long >( readyToMSleep ) );
+    }
+
+    lastTriggeredTime_ = QDateTime::currentMSecsSinceEpoch();
+}
+
+bool JQFpsControl::readyNextFrame()
+{
+    const auto &&currentMSecsSinceEpoch = QDateTime::currentMSecsSinceEpoch();
+    const int timeInterval = qMax( 1, static_cast< int >( 1000.0 / fps_ ) );
+
+    if ( ( currentMSecsSinceEpoch - lastTriggeredTime_ ) >= timeInterval )
+    {
+        lastTriggeredTime_ = ( currentMSecsSinceEpoch / timeInterval ) * timeInterval;
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 // JQMemoryPool
 QMutex JQMemoryPool::mutex_;
 QMap< size_t, QVector< JQMemoryPool::JQMemoryPoolNodeHead > > JQMemoryPool::nodeMap_;
 
+QAtomicInteger< qint64 > JQMemoryPool::realTotalMallocSize_ = 0;
 QAtomicInteger< qint64 > JQMemoryPool::totalMallocSize_ = 0;
+QAtomicInteger< qint64 > JQMemoryPool::totalMallocCount_ = 0;
 qint64 JQMemoryPool::releaseThreshold_ = -1;
 
-void JQMemoryPool::initReleaseThreshold()
+void JQMemoryPool::initReleaseThreshold(const qreal &percentage)
 {
 #ifdef Q_OS_WIN
     MEMORYSTATUSEX statex;
     statex.dwLength = sizeof( statex );
     GlobalMemoryStatusEx( &statex );
-    releaseThreshold_ = statex.ullAvailPhys / 2;
+    releaseThreshold_ = static_cast< qint64 >( statex.ullTotalPhys * percentage );
 #else
+    Q_UNUSED( percentage )
+
     releaseThreshold_ = static_cast< qint64 >( 8 ) * 1024 * 1024 * 1024;
 #endif
 
     qDebug() << "JQMemoryPool: Release threshold set to:" << ( releaseThreshold_ / 1024 / 1024 ) << "MB";
+}
+
+qint64 JQMemoryPool::realTotalMallocSize()
+{
+    return realTotalMallocSize_;
 }
 
 qint64 JQMemoryPool::totalMallocSize()
@@ -736,8 +1174,16 @@ qint64 JQMemoryPool::totalMallocSize()
     return totalMallocSize_;
 }
 
+qint64 JQMemoryPool::totalMallocCount()
+{
+    return totalMallocCount_;
+}
+
 void *JQMemoryPool::requestMemory(const size_t &requestSize)
 {
+    totalMallocSize_ += static_cast< qint64 >( requestSize );
+    ++totalMallocCount_;
+
     mutex_.lock();
 
     if ( releaseThreshold_ <= 0 )
@@ -773,13 +1219,13 @@ void JQMemoryPool::recoverMemory(void *memory)
         return;
     }
 
-    if ( ( totalMallocSize_ > releaseThreshold_ ) ||
+    if ( ( realTotalMallocSize_ > releaseThreshold_ ) ||
          ( node->requestSize < 128 ) )
     {
-        totalMallocSize_ -= node->requestSize;
-        if ( totalMallocSize_ < 0 )
+        realTotalMallocSize_ -= static_cast< long long >( node->requestSize );
+        if ( realTotalMallocSize_ < 0 )
         {
-            qDebug() << "JQMemoryPool::recoverMemory: error:" << totalMallocSize_ << node->requestSize;
+            qDebug() << "JQMemoryPool::recoverMemory: error:" << realTotalMallocSize_ << node->requestSize;
         }
 
         free( reinterpret_cast< qint8 * >( memory ) - sizeof( JQMemoryPoolNodeHead ) );
@@ -796,11 +1242,11 @@ JQMemoryPool::JQMemoryPoolNodeHead JQMemoryPool::makeNode(const size_t &requestS
 {
     static qint64 lastPrintSize = 0;
 
-    totalMallocSize_ += static_cast< qint64 >( requestSize );
-    if ( ( totalMallocSize_ - lastPrintSize ) > ( 256 * 1024 * 1024 ) )
+    realTotalMallocSize_ += static_cast< qint64 >( requestSize );
+    if ( ( realTotalMallocSize_ - lastPrintSize ) > ( 256 * 1024 * 1024 ) )
     {
-        lastPrintSize = totalMallocSize_;
-        qDebug() << "JQMemoryPool::makeNode: totalMallocSize:" << ( totalMallocSize_ / 1024 / 1024 ) << "MB";
+        lastPrintSize = realTotalMallocSize_;
+        qDebug() << "JQMemoryPool::makeNode: totalMallocSize:" << ( realTotalMallocSize_ / 1024 / 1024 ) << "MB";
     }
 
     auto buffer = malloc( sizeof( JQMemoryPoolNodeHead ) + requestSize + 100 );
