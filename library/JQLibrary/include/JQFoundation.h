@@ -1,18 +1,28 @@
 ﻿/*
     This file is part of JQLibrary
 
-    Copyright: Jason
+    Copyright: Jason and others
 
     Contact email: 188080501@qq.com
 
-    GNU Lesser General Public License Usage
-    Alternatively, this file may be used under the terms of the GNU Lesser
-    General Public License version 2.1 or version 3 as published by the Free
-    Software Foundation and appearing in the file LICENSE.LGPLv21 and
-    LICENSE.LGPLv3 included in the packaging of this file. Please review the
-    following information to ensure the GNU Lesser General Public License
-    requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #ifndef JQLIBRARY_INCLUDE_JQFOUNDATION_H_
@@ -48,7 +58,11 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QDebug>
-#include <QThreadPool>
+
+#ifdef QT_CONCURRENT_LIB
+#   include <QThread>
+#   include <QThreadPool>
+#endif
 
 // JQLibrary lib import
 #include <JQDeclare>
@@ -128,21 +142,13 @@ void JQLIBRARY_EXPORT setTimerCallback(
     );
 #endif
 
-void JQLIBRARY_EXPORT setDebugOutput(
-        const QString &targetFilePath,
-        const bool &argDateFlag = false,
-        const std::function< void(const QMessageLogContext &context, const QString &) > &warningMessageCallback = nullptr
-    );
+void JQLIBRARY_EXPORT setDebugOutput(const QString &targetFilePath, const bool &argDateFlag = false);
 
 void openDebugConsole();
 
 bool JQLIBRARY_EXPORT singleApplication(const QString &flag);
 
 bool JQLIBRARY_EXPORT singleApplicationExist(const QString &flag);
-
-QByteArray pixmapToByteArray(const QPixmap &pixmap, const QString &format, int quality = -1);
-
-QByteArray imageToByteArray(const QImage &image, const QString &format, int quality = -1);
 
 QString snakeCaseToCamelCase(const QString &source, const bool &firstCharUpper = false);
 
@@ -170,13 +176,19 @@ QLine lineFToLine(const QLineF &line, const QSize &size);
 
 QRect cropRect(const QRect &rect, const QRect &bigRect);
 
+#ifdef QT_CONCURRENT_LIB
+QByteArray pixmapToByteArray(const QPixmap &pixmap, const QString &format, int quality = -1);
+
+QByteArray imageToByteArray(const QImage &image, const QString &format, int quality = -1);
+
 QImage imageCopy(const QImage &image, const QRect &rect);
 
 QImage removeImageColor(const QImage &image, const QColor &color);
 
-QList< QPair< QDateTime, QDateTime > > extractTimeRange(const QDateTime &startTime, const QDateTime &endTime, const qint64 &interval);
-
 void waitFor(const std::function< bool() > &predicate, const int &timeout);
+#endif
+
+QList< QPair< QDateTime, QDateTime > > extractTimeRange(const QDateTime &startTime, const QDateTime &endTime, const qint64 &interval);
 
 #if ( ( defined Q_OS_MAC ) && !( defined Q_OS_IOS ) ) || ( defined Q_OS_WIN ) || ( defined Q_OS_LINUX )
 QPair< int, QByteArray > JQLIBRARY_EXPORT startProcessAndReadOutput(const QString &program, const QStringList &arguments, const int &maximumTime = 5 * 1000);
@@ -254,6 +266,7 @@ private:
     QSharedPointer< QMutex > mutex_;
 };
 
+#ifdef QT_CONCURRENT_LIB
 class JQLIBRARY_EXPORT JQFpsControl
 {
 public:
@@ -314,5 +327,6 @@ private:
     static QAtomicInteger< qint64 > totalMallocCount_;
     static qint64 releaseThreshold_;
 };
+#endif
 
 #endif//JQLIBRARY_INCLUDE_JQFOUNDATION_H_

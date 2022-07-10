@@ -1,18 +1,28 @@
 ﻿/*
     This file is part of JQLibrary
 
-    Copyright: Jason
+    Copyright: Jason and others
 
     Contact email: 188080501@qq.com
 
-    GNU Lesser General Public License Usage
-    Alternatively, this file may be used under the terms of the GNU Lesser
-    General Public License version 2.1 or version 3 as published by the Free
-    Software Foundation and appearing in the file LICENSE.LGPLv21 and
-    LICENSE.LGPLv3 included in the packaging of this file. Please review the
-    following information to ensure the GNU Lesser General Public License
-    requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 // JQFoundation header include
@@ -39,8 +49,6 @@
 #include <QDateTime>
 #include <QTextStream>
 #include <QMutex>
-#include <QThread>
-#include <QThreadPool>
 
 #ifdef QT_CONCURRENT_LIB
 #   include <QtConcurrent>
@@ -464,16 +472,11 @@ void JQFoundation::setTimerCallback(
 }
 #endif
 
-void JQFoundation::setDebugOutput(
-        const QString &rawTargetFilePath_,
-        const bool &argDateFlag_,
-        const std::function< void(const QMessageLogContext &context, const QString &) > &warningMessageCallback_
-    )
+void JQFoundation::setDebugOutput(const QString &rawTargetFilePath_, const bool &argDateFlag_)
 {
     static QString rawTargetFilePath;
     static bool argDateFlag;
     static const QtMessageHandler QT_DEFAULT_MESSAGE_HANDLER = qInstallMessageHandler( nullptr );
-    static std::function< void(const QMessageLogContext &, const QString &) > warningMessageCallback = warningMessageCallback_;
 
     rawTargetFilePath = rawTargetFilePath_;
     argDateFlag = argDateFlag_;
@@ -536,11 +539,6 @@ void JQFoundation::setDebugOutput(
 
             QTextStream textStream( &file );
             textStream << QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss" ) << ": " << message << endl;
-
-            if ( warningMessageCallback && ( type == QtWarningMsg ) )
-            {
-                warningMessageCallback( context, rawMessage );
-            }
         }
     };
 
@@ -596,7 +594,7 @@ void JQFoundation::openDebugConsole()
 #endif
 }
 
-#if !(defined Q_OS_IOS) && !(defined Q_OS_ANDROID) && !(defined Q_OS_WINPHONE)
+#if !(defined Q_OS_IOS) && !(defined Q_OS_ANDROID) && !(defined Q_OS_WINPHONE) && !(defined Q_OS_WASM)
 bool JQFoundation::singleApplication(const QString &flag)
 {
     static QMap< QString, QSharedMemory * > shareMemSet;
@@ -624,14 +622,7 @@ bool JQFoundation::singleApplication(const QString &flag)
 
     return false;
 }
-#else
-bool JQFoundation::singleApplication(const QString &)
-{
-    return true;
-}
-#endif
 
-#if !(defined Q_OS_IOS) && !(defined Q_OS_ANDROID) && !(defined Q_OS_WINPHONE)
 bool JQFoundation::singleApplicationExist(const QString &flag)
 {
     QSharedMemory shareMem( flag );
@@ -652,63 +643,16 @@ bool JQFoundation::singleApplicationExist(const QString &flag)
     return true;
 }
 #else
+bool JQFoundation::singleApplication(const QString &)
+{
+    return true;
+}
+
 bool JQFoundation::singleApplicationExist(const QString &)
 {
     return false;
 }
 #endif
-
-QByteArray JQFoundation::pixmapToByteArray(const QPixmap &pixmap, const QString &format, int quality)
-{
-    QByteArray bytes;
-    QBuffer buffer( &bytes );
-
-    buffer.open( QIODevice::WriteOnly );
-    pixmap.save( &buffer, format.toLatin1().data(), quality );
-
-    return bytes;
-}
-
-QByteArray JQFoundation::imageToByteArray(const QImage &image, const QString &format, int quality)
-{
-    static QMap< QThread *, QByteArray * > cacheMap; // thread -> QByteArray
-    static QMutex cacheMutex;
-
-    QByteArray *bytes = nullptr;
-
-    cacheMutex.lock();
-
-    {
-        auto it = cacheMap.find( QThread::currentThread() );
-        if ( ( it == cacheMap.end() ) || !*it )
-        {
-            bytes = new QByteArray;
-            cacheMap[ QThread::currentThread() ] = bytes;
-        }
-        else
-        {
-            bytes = *it;
-        }
-    }
-
-    cacheMutex.unlock();
-
-    if ( bytes->capacity() <= 0 )
-    {
-        bytes->reserve( 512 * 1024 );
-    }
-
-//    qDebug() << reinterpret_cast< const void * >( bytes->constData() ) << bytes->size() << bytes->capacity();
-
-    QBuffer buffer( bytes );
-
-    buffer.open( QIODevice::WriteOnly );
-    image.save( &buffer, format.toLatin1().data(), quality );
-
-//    qDebug() << reinterpret_cast< const void * >( bytes->constData() ) << bytes->size() << bytes->capacity();
-
-    return *bytes;
-}
 
 QString JQFoundation::snakeCaseToCamelCase(const QString &source, const bool &firstCharUpper)
 {
@@ -883,6 +827,59 @@ QRect JQFoundation::cropRect(const QRect &rect, const QRect &bigRect)
     };
 }
 
+#ifdef QT_CONCURRENT_LIB
+QByteArray JQFoundation::pixmapToByteArray(const QPixmap &pixmap, const QString &format, int quality)
+{
+    QByteArray bytes;
+    QBuffer buffer( &bytes );
+
+    buffer.open( QIODevice::WriteOnly );
+    pixmap.save( &buffer, format.toLatin1().data(), quality );
+
+    return bytes;
+}
+
+QByteArray JQFoundation::imageToByteArray(const QImage &image, const QString &format, int quality)
+{
+    static QMap< QThread *, QByteArray * > cacheMap; // thread -> QByteArray
+    static QMutex cacheMutex;
+
+    QByteArray *bytes = nullptr;
+
+    cacheMutex.lock();
+
+    {
+        auto it = cacheMap.find( QThread::currentThread() );
+        if ( ( it == cacheMap.end() ) || !*it )
+        {
+            bytes = new QByteArray;
+            cacheMap[ QThread::currentThread() ] = bytes;
+        }
+        else
+        {
+            bytes = *it;
+        }
+    }
+
+    cacheMutex.unlock();
+
+    if ( bytes->capacity() <= 0 )
+    {
+        bytes->reserve( 512 * 1024 );
+    }
+
+//    qDebug() << reinterpret_cast< const void * >( bytes->constData() ) << bytes->size() << bytes->capacity();
+
+    QBuffer buffer( bytes );
+
+    buffer.open( QIODevice::WriteOnly );
+    image.save( &buffer, format.toLatin1().data(), quality );
+
+//    qDebug() << reinterpret_cast< const void * >( bytes->constData() ) << bytes->size() << bytes->capacity();
+
+    return *bytes;
+}
+
 QImage JQFoundation::imageCopy(const QImage &image, const QRect &rect)
 {
     const auto &&unitedRect = QRect( 0, 0, image.width(), image.height() ).united( rect );
@@ -970,6 +967,16 @@ QImage JQFoundation::removeImageColor(const QImage &image, const QColor &color)
     return result;
 }
 
+void JQFoundation::waitFor(const std::function< bool() > &predicate, const int &timeout)
+{
+    for ( auto current = 0; current < timeout; current += 25 )
+    {
+        if ( !predicate() ) { break; }
+        QThread::msleep( 25 );
+    }
+}
+#endif
+
 QList< QPair< QDateTime, QDateTime > > JQFoundation::extractTimeRange(const QDateTime &startTime, const QDateTime &endTime, const qint64 &interval)
 {
     if ( interval <= 0 )
@@ -995,15 +1002,6 @@ QList< QPair< QDateTime, QDateTime > > JQFoundation::extractTimeRange(const QDat
     }
 
     return result;
-}
-
-void JQFoundation::waitFor(const std::function< bool() > &predicate, const int &timeout)
-{
-    for ( auto current = 0; current < timeout; current += 25 )
-    {
-        if ( !predicate() ) { break; }
-        QThread::msleep( 25 );
-    }
 }
 
 #if ( ( defined Q_OS_MAC ) && !( defined Q_OS_IOS ) ) || ( defined Q_OS_WIN ) || ( defined Q_OS_LINUX )
@@ -1084,6 +1082,7 @@ QString JQTickCounter::tickPerSecondDisplayString()
 }
 
 // AtcityFpsControl
+#ifdef QT_CONCURRENT_LIB
 JQFpsControl::JQFpsControl(const qreal &fps):
     fps_( fps )
 { }
@@ -1260,3 +1259,4 @@ JQMemoryPool::JQMemoryPoolNodeHead JQMemoryPool::makeNode(const size_t &requestS
 
     return *node;
 }
+#endif

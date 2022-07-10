@@ -1,19 +1,30 @@
 #
 #   This file is part of JQLibrary
 #
-#   Copyright: Jason
+#   Copyright: Jason and others
 #
 #   Contact email: 188080501@qq.com
 #
-#   GNU Lesser General Public License Usage
-#   Alternatively, this file may be used under the terms of the GNU Lesser
-#   General Public License version 2.1 or version 3 as published by the Free
-#   Software Foundation and appearing in the file LICENSE.LGPLv21 and
-#   LICENSE.LGPLv3 included in the packaging of this file. Please review the
-#   following information to ensure the GNU Lesser General Public License
-#   requirements will be met: https://www.gnu.org/licenses/lgpl.html and
-#   http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+#   Permission is hereby granted, free of charge, to any person obtaining
+#   a copy of this software and associated documentation files (the
+#   "Software"), to deal in the Software without restriction, including
+#   without limitation the rights to use, copy, modify, merge, publish,
+#   distribute, sublicense, and/or sell copies of the Software, and to
+#   permit persons to whom the Software is furnished to do so, subject to
+#   the following conditions:
 #
+#   The above copyright notice and this permission notice shall be
+#   included in all copies or substantial portions of the Software.
+#
+#   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+#   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+#   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+#   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+#   LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+#   OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+#   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
 
 QT *= core gui
 
@@ -46,13 +57,19 @@ contains( QT, bluetooth ) : exists( $$PWD/src/JQBluetooth.cpp ) {
     }
 }
 
-exists( $$PWD/src/JQChecksum.cpp ) {
+exists( $$PWD/include/jqchecksum.hpp ) {
 
     !contains( DEFINES, JQLIBRARY_EXPORT_ENABLE ) | contains( DEFINES, JQLIBRARY_EXPORT_MODE ) {
 
-        HEADERS *= $$PWD/include/JQChecksum.h
+        HEADERS *= $$PWD/include/jqchecksum.hpp
+    }
+}
 
-        SOURCES *= $$PWD/src/JQChecksum.cpp
+exists( $$PWD/include/jqdeclare.hpp ) {
+
+    !contains( DEFINES, JQLIBRARY_EXPORT_ENABLE ) | contains( DEFINES, JQLIBRARY_EXPORT_MODE ) {
+
+        HEADERS *= $$PWD/include/jqdeclare.hpp
     }
 }
 
@@ -113,13 +130,13 @@ exists( $$PWD/src/jqgpio.cpp ) {
     }
 }
 
-contains( QT, network ) : contains( QT, concurrent ) : exists( $$PWD/src/JQHttpServer.cpp ) {
+contains( QT, network ) : contains( QT, concurrent ) : exists( $$PWD/src/jqhttpserver.cpp ) {
 
     !contains( DEFINES, JQLIBRARY_EXPORT_ENABLE ) | contains( DEFINES, JQLIBRARY_EXPORT_MODE ) {
 
-        HEADERS *= $$PWD/include/JQHttpServer.h
+        HEADERS *= $$PWD/include/jqhttpserver.h
 
-        SOURCES *= $$PWD/src/JQHttpServer.cpp
+        SOURCES *= $$PWD/src/jqhttpserver.cpp
     }
 }
 
@@ -145,13 +162,13 @@ exists( $$PWD/src/JQLanguage.cpp ) {
     }
 }
 
-contains( QT, network ) : exists( $$PWD/src/JQNet.cpp ) {
+contains( QT, network ) : exists( $$PWD/src/jqnet.cpp ) : !wasm {
 
     !contains( DEFINES, JQLIBRARY_EXPORT_ENABLE ) | contains( DEFINES, JQLIBRARY_EXPORT_MODE ) {
 
-        HEADERS *= $$PWD/include/JQNet.h
+        HEADERS *= $$PWD/include/jqnet.h
 
-        SOURCES *= $$PWD/src/JQNet.cpp
+        SOURCES *= $$PWD/src/jqnet.cpp
     }
 }
 
@@ -195,7 +212,7 @@ contains( QT, network ) : exists( $$PWD/src/JQSystemFlag.cpp ) {
     }
 }
 
-exists( $$PWD/src/jqthread.cpp ) {
+exists( $$PWD/src/jqthread.cpp ) : !wasm {
 
     !contains( DEFINES, JQLIBRARY_EXPORT_ENABLE ) | contains( DEFINES, JQLIBRARY_EXPORT_MODE ) {
 

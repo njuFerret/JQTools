@@ -48,7 +48,8 @@ ApplicationWindow {
                                 { bookmarkName: "密码随机器", titleName: "密码随机器", qrcLocation: "qrc:/RandomPassword/RandomPassword.qml" },
                                 { bookmarkName: "UUID随机器", titleName: "UUID随机器", qrcLocation: "qrc:/RandomUuid/RandomUuid.qml" },
                                 { bookmarkName: "URL转码", titleName: "URL转码", qrcLocation: "qrc:/UrlEncode/UrlEncode.qml" },
-                                { bookmarkName: "JSON格式化", titleName: "JSON格式化", qrcLocation: "qrc:/JsonFormat/JsonFormat.qml" }
+                                { bookmarkName: "JSON格式化", titleName: "JSON格式化", qrcLocation: "qrc:/JsonFormat/JsonFormat.qml" },
+                                { bookmarkName: "字符串排序", titleName: "字符串排序", qrcLocation: "qrc:/StringSort/StringSort.qml" }
                             ]
                         },
                         {
@@ -85,7 +86,7 @@ ApplicationWindow {
                                 { bookmarkName: "JPG图片压缩", titleName: "JPG图片压缩", qrcLocation: "qrc:/JpgOptimize/JpgOptimize.qml" },
                                 { bookmarkName: "二维码识别器", titleName: "二维码识别器 ", qrcLocation: "qrc:/QRCodeReader/QRCodeReader.qml" },
                                 { bookmarkName: "批量替换", titleName: "批量替换 ", qrcLocation: "qrc:/BatchReplacement/BatchReplacement.qml" },
-                                { bookmarkName: "屏幕拾色器", titleName: "屏幕拾色器", qrcLocation: "notSupport" },
+                                { bookmarkName: "屏幕拾色器", titleName: "屏幕拾色器", qrcLocation: "qrc:/ScreenColorPicker/ScreenColorPicker.qml" },
                                 { bookmarkName: "局域网文件传输", titleName: "局域网文件传输", qrcLocation: "qrc:/LanFileTransport/LanFileTransport.qml" }
                             ]
                         },
