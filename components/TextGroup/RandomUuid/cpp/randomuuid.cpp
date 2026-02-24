@@ -15,25 +15,16 @@
 // Qt lib import
 #include <QCoreApplication>
 #include <QDateTime>
-
-// JQLibrary lib import
-#include "JQFoundation.h"
+#include <QUuid>
 
 using namespace RandomUuid;
 
 Manage::Manage()
 {
-    srand( QDateTime::currentDateTime().toTime_t() + qApp->applicationFilePath().size() );
+    srand( QDateTime::currentMSecsSinceEpoch() + qApp->applicationFilePath().size() );
 }
 
-QString Manage::randomUuid(const bool &includeParantheses)
+QString Manage::randomUuid(const bool includeBraces)
 {
-    if ( includeParantheses )
-    {
-        return "{" + JQFoundation::createUuidString() + "}";
-    }
-    else
-    {
-        return JQFoundation::createUuidString();
-    }
+    return QUuid::createUuid().toString( ( includeBraces ) ? ( QUuid::WithBraces ) : ( QUuid::WithoutBraces ) );
 }

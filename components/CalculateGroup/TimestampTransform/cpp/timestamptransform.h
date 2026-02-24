@@ -16,7 +16,7 @@
 // JQToolsLibrary import
 #include <JQToolsLibrary>
 
-#define TTIMESTAMPTRANSFORM_INITIALIZA                                                                       \
+#define TIMESTAMPTRANSFORM_INITIALIZA                                                                        \
 {                                                                                                           \
     qmlRegisterType<TimestampTransform::Manage>("TimestampTransform", 1, 0, "TimestampTransformManage");    \
 }
@@ -35,9 +35,18 @@ public:
     ~Manage() = default;
 
 public slots:
-    QString currentDateTimeTimestampString();
+    QString currentSecondsTimestampString();
+
+    QString currentMillisecondsTimestampString();
+
+    QString currentDateTimeString();
 
     QString dateTimeStringFromTimestampString(const QString &timestampString);
+
+    QString timestampStringFromDateTimeString(
+            const QString &dateTimeString,
+            const bool milliseconds
+        );
 };
 
 }

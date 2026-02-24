@@ -13,17 +13,15 @@
 #include "randompassword.h"
 
 // Qt lib import
-#include <QCoreApplication>
 #include <QDateTime>
 
 using namespace RandomPassword;
 
-Manage::Manage()
-{
-    srand( QDateTime::currentDateTime().toTime_t() + qApp->applicationFilePath().size() );
-}
+Manage::Manage():
+    randomGenerator_( static_cast< quint32 >( QDateTime::currentMSecsSinceEpoch() ) )
+{ }
 
-QString Manage::randomPassword(const int &length, const bool &number, const bool &englishCharacters, const bool &caseSensitive, const bool &dividingLine)
+QString Manage::randomPassword(const int length, const bool number, const bool englishCharacters, const bool includeUppercaseLetters, const bool dividingLine)
 {
     QString password;
     QString table;
@@ -38,7 +36,7 @@ QString Manage::randomPassword(const int &length, const bool &number, const bool
     }
     if ( englishCharacters )
     {
-        if ( caseSensitive )
+        if ( includeUppercaseLetters )
         {
             table += lowercaseCharacters;
             table += upperCharacters;
@@ -59,7 +57,7 @@ QString Manage::randomPassword(const int &length, const bool &number, const bool
         }
         else
         {
-            password += table.at( rand() % table.size() );
+            password += table.at( randomGenerator_.bounded( table.size() ) );
         }
     }
 

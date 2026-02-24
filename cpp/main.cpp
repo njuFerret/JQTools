@@ -14,27 +14,34 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QtQml>
-#include <QVersionNumber>
 #include <QMessageBox>
-
-// JQLibrary import
-#include "JQFoundation.h"
+#include <QTimer>
+#include <QLockFile>
+#include <QStandardPaths>
 
 // JQToolsLibrary import
 #include <JQToolsLibrary>
-
-// Project lib import
-#include <JQToolsManage>
 
 // Group import
 #include <WelcomeGroup>
 #include <TextGroup>
 #include <CalculateGroup>
-#include <MakeGroup>
+#include <ImageGroup>
 #include <ToolsGroup>
+#include <QRCodeGroup>
 #include <QtGroup>
 
-void checkVersion();
+bool checkSingletonFlag(const QString &flag)
+{
+    auto file = new QLockFile( QString( "%1/%2" ).arg( QStandardPaths::writableLocation( QStandardPaths::TempLocation ), flag ) );
+    if ( file->tryLock() )
+    {
+        return true;
+    }
+
+    delete file;
+    return false;
+}
 
 int main(int argc, char *argv[])
 {
@@ -44,7 +51,7 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
 
-    if ( !JQFoundation::singleApplication( "JQTools" ) )
+    if ( !checkSingletonFlag( "8a6f4ab6-68d7-4a09-9e89-0e651f573b69" ) )
     {
         QTimer::singleShot( 3000, qApp, &QCoreApplication::quit );
 
@@ -56,25 +63,17 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if ( QThreadPool::globalInstance()->maxThreadCount() > 1 )
-    {
-        QThreadPool::globalInstance()->setMaxThreadCount( QThreadPool::globalInstance()->maxThreadCount() - 1 );
-    }
-
     QQmlApplicationEngine engine;
-    JQToolsManage jqToolsManage;
-
-    jqToolsManage.setQmlApplicationEngine( &engine );
+    app.setProperty( "qmlEngine", QVariant::fromValue( &engine ) );
 
     // Group initializa
     WELCOMEGROUP_INITIALIZA
     TEXTGROUP_INITIALIZA
     CALCULATEGROUP_INITIALIZA
-    MAKEGROUP_INITIALIZA
+    IMAGEGROUP_INITIALIZA
     TOOLSGROUP_INITIALIZA
+    QRCODEGROUP_INITIALIZA
     QTGROUP_INITIALIZA
-
-    engine.rootContext()->setContextProperty( "JQToolsManage", &jqToolsManage );
 
     engine.load( QUrl( "qrc:/main.qml" ) );
 

@@ -17,20 +17,13 @@ QT += qml quick widgets concurrent
 CONFIG += c++11
 CONFIG += c++14
 
-include( $$PWD/JQLibraryImport.pri )
+include( $$PWD/library/JQLibraryImport.pri )
 include( $$PWD/library/JQToolsLibrary/JQToolsLibrary.pri )
-include( $$PWD/library/JQNetwork/JQNetwork.pri )
 include( $$PWD/library/MaterialUI/MaterialUI.pri )
 include( $$PWD/components/components.pri )
 
-PRECOMPILED_HEADER = $$PWD/cpp/stable.h
-CONFIG += precompile_header
-
 INCLUDEPATH *= \
     $$PWD/cpp/
-
-HEADERS *= \
-    $$PWD/cpp/jqtools_manage.hpp
 
 SOURCES *= \
     $$PWD/cpp/main.cpp

@@ -12,33 +12,36 @@
 
 #include "batchreplacement.h"
 
+// STL import
+#include <algorithm>
+
 // Qt lib import
 #include <QSet>
-#include <QFileDialog>
-#include <QStandardPaths>
 #include <QJsonArray>
 #include <QEventLoop>
+#include <QMetaObject>
 #include <QtConcurrent>
 #include <QDir>
 
-// JQLibrary import
-#include "JQFile.h"
+// JQToolsLibrary import
+#include <JQToolsLibrary>
 
 using namespace BatchReplacement;
 
 QJsonObject Manage::startBatchReplacement(
-        const QJsonArray &suffixs,
+        const QJsonArray &suffixes,
         const QString &sourceKey,
         const QString &targetKey,
-        const bool &multiCase
+        const bool multiCase
     )
 {
     auto fileCount = 0;
     auto replacementCount = 0;
 
-    static QString lastPath = QStandardPaths::writableLocation( QStandardPaths::DesktopLocation );
-
-    auto currentPath = QFileDialog::getExistingDirectory( nullptr, "Please choose target dir", lastPath );
+    auto currentPath = AbstractTool::getExistingDirectory(
+                QStringLiteral( "ba0f41c3-0d36-454a-8e79-7728738c9309" ),
+                u8"请选择目标目录"
+            );
     if ( currentPath.isEmpty() )
     {
         return
@@ -47,38 +50,34 @@ QJsonObject Manage::startBatchReplacement(
             } };
     }
 
-    lastPath = currentPath;
+    QSet< QString > availableSuffixes;
 
-    QSet< QString > availableSuffixs;
-
-    for ( const auto suffix: suffixs )
+    for ( const auto suffix: suffixes )
     {
-        availableSuffixs.insert( suffix.toString().toLower() );
+        availableSuffixes.insert( suffix.toString().toLower() );
     }
 
     QEventLoop eventLoop;
 
     QtConcurrent::run( [ & ]()
     {
-        auto batchReplacement = [ &fileCount, &replacementCount, currentPath, availableSuffixs ](
+        auto batchReplacement = [ &fileCount, &replacementCount, currentPath, availableSuffixes ](
                 const QString &currentSourceKey,
                 const QString &currentTargetKey
             )
         {
-            qDebug() << "batchReplacement:" << currentSourceKey << currentTargetKey;
-
-            JQFile::foreachFileFromDirectory( { currentPath }, [ & ](const QFileInfo &info)
+            AbstractTool::foreachFileFromDirectory( { currentPath }, [ & ](const QFileInfo &info)
             {
                 if ( info.suffix().isEmpty() )
                 {
-                    if ( !availableSuffixs.contains( "nosuffixfile" ) )
+                    if ( !availableSuffixes.contains( "nosuffixfile" ) )
                     {
                         return;
                     }
                 }
                 else
                 {
-                    if ( !availableSuffixs.contains( info.suffix().toLower() ) )
+                    if ( !availableSuffixes.contains( info.suffix().toLower() ) )
                     {
                         return;
                     }
@@ -95,45 +94,41 @@ QJsonObject Manage::startBatchReplacement(
 
                 if ( fileAllData.isEmpty() ) { return; }
 
-                const auto &&matchCount = fileAllData.count( currentSourceKey.toUtf8() );
+                const auto matchCount = fileAllData.count( currentSourceKey.toUtf8() );
 
                 if ( !matchCount ) { return; }
-
-                qDebug() << "file data:" << info.filePath() << matchCount;
 
                 ++fileCount;
                 replacementCount += matchCount;
 
-                JQFile::writeFile( info.filePath(), fileAllData.replace( currentSourceKey.toUtf8(), currentTargetKey.toUtf8() ) );
+                AbstractTool::writeFile( QFileInfo( info.filePath() ), fileAllData.replace( currentSourceKey.toUtf8(), currentTargetKey.toUtf8() ) );
             }, true );
 
-            if ( availableSuffixs.contains( "filenameanddirname" ) )
+            if ( availableSuffixes.contains( "filenameanddirname" ) )
             {
                 QFileInfoList fileNameList;
                 QList< QDir > dirNameList;
 
-                JQFile::foreachFileFromDirectory( { currentPath }, [ & ](const QFileInfo &info)
+                AbstractTool::foreachFileFromDirectory( { currentPath }, [ & ](const QFileInfo &info)
                 {
                     if ( info.suffix().isEmpty() )
                     {
-                        if ( !availableSuffixs.contains( "nosuffixfile" ) )
+                        if ( !availableSuffixes.contains( "nosuffixfile" ) )
                         {
                             return;
                         }
                     }
                     else
                     {
-                        if ( !availableSuffixs.contains( info.suffix().toLower() ) )
+                        if ( !availableSuffixes.contains( info.suffix().toLower() ) )
                         {
                             return;
                         }
                     }
 
-                    const auto &&matchCount = info.fileName().count( currentSourceKey.toUtf8() );
+                    const auto matchCount = info.fileName().count( currentSourceKey.toUtf8() );
 
                     if ( !matchCount ) { return; }
-
-                    qDebug() << "file name:" << info.filePath() << matchCount;
 
                     ++fileCount;
                     replacementCount += matchCount;
@@ -141,13 +136,11 @@ QJsonObject Manage::startBatchReplacement(
                     fileNameList.push_back( info );
                 }, true );
 
-                JQFile::foreachDirectoryFromDirectory( { currentPath }, [ & ](const QDir &dir)
+                AbstractTool::foreachDirectoryFromDirectory( { currentPath }, [ & ](const QDir &dir)
                 {
-                    const auto &&matchCount = dir.dirName().count( currentSourceKey );
+                    const auto matchCount = dir.dirName().count( currentSourceKey );
 
                     if ( !matchCount ) { return; }
-
-                    qDebug() << "dir path:" << dir.path() << matchCount;
 
                     ++fileCount;
                     replacementCount += matchCount;
@@ -155,11 +148,26 @@ QJsonObject Manage::startBatchReplacement(
                     dirNameList.push_back( dir );
                 }, true );
 
+                // 目录改名需要先子后父，避免父目录先改名导致子目录路径失效
+                std::sort( dirNameList.begin(), dirNameList.end(), [ ](const QDir &left, const QDir &right)
+                {
+                    const auto leftPath = QDir::cleanPath( left.path() );
+                    const auto rightPath = QDir::cleanPath( right.path() );
+                    const auto leftDepth = leftPath.count( '/' );
+                    const auto rightDepth = rightPath.count( '/' );
+
+                    if ( leftDepth == rightDepth )
+                    {
+                        return leftPath.size() > rightPath.size();
+                    }
+
+                    return leftDepth > rightDepth;
+                } );
+
                 for ( const auto &info: fileNameList )
                 {
                     const QString targetFilePath = QString( "%1/%2" ).arg( info.path(), info.fileName().replace( currentSourceKey, currentTargetKey ) );
 
-                    qDebug() << "file:" << info.filePath() << "->" << targetFilePath;
                     QFile::rename( info.filePath(), targetFilePath );
                 }
 
@@ -167,7 +175,6 @@ QJsonObject Manage::startBatchReplacement(
                 {
                     const QString targetDir = QString( "%1/%2" ).arg( QFileInfo( dir.path() ).path(), dir.dirName().replace( currentSourceKey, currentTargetKey ) );
 
-                    qDebug() << "dir:" << dir.path() << "->" << targetDir;
                     QDir().rename( dir.path(), targetDir );
                 }
             }
@@ -203,7 +210,7 @@ QJsonObject Manage::startBatchReplacement(
             batchReplacement( sourceKey, targetKey );
         }
 
-        eventLoop.quit();
+        QMetaObject::invokeMethod( &eventLoop, "quit" );
     } );
 
     eventLoop.exec();

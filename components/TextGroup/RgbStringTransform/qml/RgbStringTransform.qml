@@ -52,9 +52,9 @@ Item {
                 rgbStringTransform.changingFlag = true;
 
                 textFieldForHexString.text = rgbStringTransformManage.getHexStringFromColorName( textFieldForColorName.text );
-                textFiedForRed.text = rgbStringTransformManage.getRed( textFieldForHexString.text );
-                textFiedForGreen.text = rgbStringTransformManage.getGreen( textFieldForHexString.text );
-                textFiedForBlue.text = rgbStringTransformManage.getBlue( textFieldForHexString.text );
+                textFieldForRed.text = rgbStringTransformManage.getRed( textFieldForHexString.text );
+                textFieldForGreen.text = rgbStringTransformManage.getGreen( textFieldForHexString.text );
+                textFieldForBlue.text = rgbStringTransformManage.getBlue( textFieldForHexString.text );
 
                 rgbStringTransform.changingFlag = false;
             }
@@ -74,16 +74,16 @@ Item {
                 rgbStringTransform.changingFlag = true;
 
                 textFieldForColorName.text = "";
-                textFiedForRed.text = rgbStringTransformManage.getRed( textFieldForHexString.text );
-                textFiedForGreen.text = rgbStringTransformManage.getGreen( textFieldForHexString.text );
-                textFiedForBlue.text = rgbStringTransformManage.getBlue( textFieldForHexString.text );
+                textFieldForRed.text = rgbStringTransformManage.getRed( textFieldForHexString.text );
+                textFieldForGreen.text = rgbStringTransformManage.getGreen( textFieldForHexString.text );
+                textFieldForBlue.text = rgbStringTransformManage.getBlue( textFieldForHexString.text );
 
                 rgbStringTransform.changingFlag = false;
             }
         }
 
         MaterialTextField {
-            id: textFiedForRed
+            id: textFieldForRed
             x: 156
             y: 313
             placeholderText: "红(R)"
@@ -96,14 +96,14 @@ Item {
                 rgbStringTransform.changingFlag = true;
 
                 textFieldForColorName.text = "";
-                textFieldForHexString.text = rgbStringTransformManage.getHexString( textFiedForRed.text, textFiedForGreen.text, textFiedForBlue.text );
+                textFieldForHexString.text = rgbStringTransformManage.getHexString( textFieldForRed.text, textFieldForGreen.text, textFieldForBlue.text );
 
                 rgbStringTransform.changingFlag = false;
             }
         }
 
         MaterialTextField {
-            id: textFiedForGreen
+            id: textFieldForGreen
             x: 222
             y: 313
             placeholderText: "绿(G)"
@@ -116,14 +116,14 @@ Item {
                 rgbStringTransform.changingFlag = true;
 
                 textFieldForColorName.text = "";
-                textFieldForHexString.text = rgbStringTransformManage.getHexString( textFiedForRed.text, textFiedForGreen.text, textFiedForBlue.text );
+                textFieldForHexString.text = rgbStringTransformManage.getHexString( textFieldForRed.text, textFieldForGreen.text, textFieldForBlue.text );
 
                 rgbStringTransform.changingFlag = false;
             }
         }
 
         MaterialTextField {
-            id: textFiedForBlue
+            id: textFieldForBlue
             x: 288
             y: 313
             placeholderText: "蓝(B)"
@@ -136,7 +136,7 @@ Item {
                 rgbStringTransform.changingFlag = true;
 
                 textFieldForColorName.text = "";
-                textFieldForHexString.text = rgbStringTransformManage.getHexString( textFiedForRed.text, textFiedForGreen.text, textFiedForBlue.text );
+                textFieldForHexString.text = rgbStringTransformManage.getHexString( textFieldForRed.text, textFieldForGreen.text, textFieldForBlue.text );
 
                 rgbStringTransform.changingFlag = false;
             }
@@ -166,11 +166,11 @@ Item {
             x: 387
             y: 209
             width: 120
-            text: "从剪切板黏贴"
+            text: "从剪贴板粘贴"
 
             onClicked: {
                 textFieldForHexString.text = rgbStringTransformManage.clipboardText();
-                materialUI.showSnackbarMessage( "已从剪切板复制了颜色字符串" );
+                materialUI.showSnackbarMessage( "已从剪贴板粘贴颜色字符串" );
             }
         }
 
@@ -178,11 +178,11 @@ Item {
             x: 387
             y: 276
             width: 120
-            text: "复制到剪切板"
+            text: "复制到剪贴板"
 
             onClicked: {
                 rgbStringTransformManage.setClipboardText( textFieldForHexString.text );
-                materialUI.showSnackbarMessage( "颜色十六进制字符串已经复制到了剪切板" );
+                materialUI.showSnackbarMessage( "颜色十六进制字符串已经复制到了剪贴板" );
             }
         }
 

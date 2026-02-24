@@ -37,7 +37,9 @@ public:
 public slots:
     bool check(const QString &string);
 
-    QString format(const QString &string, const bool &compact);
+    QString parseErrorString(const QString &string);
+
+    QString format(const QString &string, const bool compact);
 };
 
 }

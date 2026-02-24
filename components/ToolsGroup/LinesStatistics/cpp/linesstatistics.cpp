@@ -14,25 +14,25 @@
 
 // Qt lib import
 #include <QSet>
-#include <QFileDialog>
-#include <QStandardPaths>
 #include <QJsonArray>
 #include <QEventLoop>
+#include <QMetaObject>
 #include <QtConcurrent>
 
-// JQLibrary import
-#include "JQFile.h"
+// JQToolsLibrary import
+#include <JQToolsLibrary>
 
 using namespace LinesStatistics;
 
-QJsonObject Manage::statisticsLines(const QJsonArray &suffixs)
+QJsonObject Manage::collectLineStatistics(const QJsonArray &suffixes)
 {
     auto fileCount = 0;
     auto lineCount = 0;
 
-    auto currentPath = QFileDialog::getExistingDirectory( nullptr,
-                                                          "Please choose code dir",
-                                                          QStandardPaths::writableLocation( QStandardPaths::DesktopLocation ) );
+    auto currentPath = AbstractTool::getExistingDirectory(
+                QStringLiteral( "5bf4742e-886d-4938-840f-3106416f9416" ),
+                u8"请选择代码目录"
+            );
     if ( currentPath.isEmpty() )
     {
         return
@@ -41,49 +41,49 @@ QJsonObject Manage::statisticsLines(const QJsonArray &suffixs)
             } };
     }
 
-    QSet< QString > availableSuffixs;
+    QSet< QString > availableSuffixes;
 
-    for ( const auto suffix: suffixs )
+    for ( const auto suffix: suffixes )
     {
-        availableSuffixs.insert( suffix.toString().toLower() );
+        availableSuffixes.insert( suffix.toString().toLower() );
     }
 
     QEventLoop eventLoop;
 
     QtConcurrent::run( [ & ]()
     {
-        static QSet< QString > imageSuffixs;
-        if ( imageSuffixs.isEmpty() )
+        static QSet< QString > imageSuffixes;
+        if ( imageSuffixes.isEmpty() )
         {
-            imageSuffixs.insert( "png" );
-            imageSuffixs.insert( "jpg" );
-            imageSuffixs.insert( "jpeg" );
-            imageSuffixs.insert( "bmp" );
-            imageSuffixs.insert( "gif" );
-            imageSuffixs.insert( "svg" );
-            imageSuffixs.insert( "psd" );
-            imageSuffixs.insert( "ai" );
+            imageSuffixes.insert( "png" );
+            imageSuffixes.insert( "jpg" );
+            imageSuffixes.insert( "jpeg" );
+            imageSuffixes.insert( "bmp" );
+            imageSuffixes.insert( "gif" );
+            imageSuffixes.insert( "svg" );
+            imageSuffixes.insert( "psd" );
+            imageSuffixes.insert( "ai" );
         }
 
-        JQFile::foreachFileFromDirectory( { currentPath }, [ & ](const QFileInfo &info)
+        AbstractTool::foreachFileFromDirectory( { currentPath }, [ & ](const QFileInfo &info)
         {
-            if ( !availableSuffixs.contains( info.suffix().toLower() ) ) { return; }
+            if ( !availableSuffixes.contains( info.suffix().toLower() ) ) { return; }
 
             QFile file( info.filePath() );
             if ( !file.open( QIODevice::ReadOnly ) ) { return; }
 
             fileCount++;
 
-            const auto &&fileAllData = file.readAll();
+            const auto fileAllData = file.readAll();
 
             if ( fileAllData.isEmpty() ) { return; }
 
-            if ( imageSuffixs.contains( info.suffix().toLower() ) ) { return; }
+            if ( imageSuffixes.contains( info.suffix().toLower() ) ) { return; }
 
             lineCount += fileAllData.count('\n') + 1;
         }, true );
 
-        eventLoop.quit();
+        QMetaObject::invokeMethod( &eventLoop, "quit" );
     } );
 
     eventLoop.exec();

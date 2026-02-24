@@ -78,10 +78,10 @@ Item {
         }
 
         MaterialCheckBox {
-            id: checkBoxForCaseSensitive
+            id: checkBoxForIncludeUppercaseLetters
             x: 302
             y: 181
-            text: "区分大小写"
+            text: "包含大写字母"
             checked: true
             enabled: checkBoxForEnglishCharacters.checked
         }
@@ -105,7 +105,7 @@ Item {
                                 parseInt( textFieldForLength.text ),
                                 checkBoxForNumber.checked,
                                 checkBoxForEnglishCharacters.checked,
-                                checkBoxForCaseSensitive.checked,
+                                checkBoxForIncludeUppercaseLetters.checked,
                                 checkBoxForDividingLine.checked
                             );
                 materialUI.showSnackbarMessage( "随机密码已经生成" );
@@ -116,11 +116,11 @@ Item {
             x: 166
             y: 259
             width: 120
-            text: "复制到剪切板"
+            text: "复制到剪贴板"
 
             onClicked: {
                 randomPasswordManage.setClipboardText( textFieldForPassword.text );
-                materialUI.showSnackbarMessage( "密码已经复制到了剪切板" );
+                materialUI.showSnackbarMessage( "密码已经复制到了剪贴板" );
             }
         }
     }

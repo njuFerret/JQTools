@@ -39,10 +39,10 @@ public:
 
 public slots:
     QJsonObject startBatchReplacement(
-            const QJsonArray &suffixs,
+            const QJsonArray &suffixes,
             const QString &sourceKey,
             const QString &targetKey,
-            const bool &multiCase
+            const bool multiCase
         );
 };
 

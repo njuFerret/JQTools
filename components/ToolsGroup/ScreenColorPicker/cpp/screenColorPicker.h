@@ -10,16 +10,16 @@
     GitHub: https://github.com/188080501/
 */
 
-#ifndef GROUP_TOOLSGROUP_SCREENCOLORPICKER_CPP_SCREENCOLORPICKER_H
-#define GROUP_TOOLSGROUP_SCREENCOLORPICKER_CPP_SCREENCOLORPICKER_H
+#ifndef GROUP_TOOLSGROUP_SCREENCOLORPICKER_CPP_SCREENCOLORPICKER_H_
+#define GROUP_TOOLSGROUP_SCREENCOLORPICKER_CPP_SCREENCOLORPICKER_H_
 
 // Qt lib import
 #include <QJsonObject>
+#include <QColor>
 
 // JQToolsLibrary import
 #include <JQToolsLibrary>
 #include "colorpicker.h"
-
 
 #define SCREENCOLORPICKER_INITIALIZA                                                              \
 {                                                                                               \
@@ -51,4 +51,4 @@ private:
 
 }
 
-#endif//GROUP_TOOLSGROUP_SCREENCOLORPICKER_CPP_SCREENCOLORPICKER_H
+#endif//GROUP_TOOLSGROUP_SCREENCOLORPICKER_CPP_SCREENCOLORPICKER_H_
