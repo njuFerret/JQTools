@@ -22,6 +22,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMetaObject>
+#include <QProcess>
 #include <QStandardPaths>
 #include <QtConcurrent>
 
@@ -75,7 +76,7 @@ QString Manage::makeAll()
     QEventLoop eventLoop;
     QString reply;
 
-    QtConcurrent::run( [ this, &eventLoop, &reply ]()
+    auto future = QtConcurrent::run( [ this, &eventLoop, &reply ]()
     {
         try
         {
@@ -95,6 +96,7 @@ QString Manage::makeAll()
         reply = "OK";
         QMetaObject::invokeMethod( &eventLoop, "quit" );
     } );
+    Q_UNUSED( future );
 
     eventLoop.exec();
 
@@ -106,7 +108,7 @@ QString Manage::makeOSX()
     QEventLoop eventLoop;
     QString reply;
 
-    QtConcurrent::run( [ this, &eventLoop, &reply ]()
+    auto future = QtConcurrent::run( [ this, &eventLoop, &reply ]()
     {
         try
         {
@@ -122,6 +124,7 @@ QString Manage::makeOSX()
         reply = "OK";
         QMetaObject::invokeMethod( &eventLoop, "quit" );
     } );
+    Q_UNUSED( future );
 
     eventLoop.exec();
 
@@ -133,7 +136,7 @@ QString Manage::makeIOS()
     QEventLoop eventLoop;
     QString reply;
 
-    QtConcurrent::run( [ this, &eventLoop, &reply ]()
+    auto future = QtConcurrent::run( [ this, &eventLoop, &reply ]()
     {
         try
         {
@@ -149,6 +152,7 @@ QString Manage::makeIOS()
         reply = "OK";
         QMetaObject::invokeMethod( &eventLoop, "quit" );
     } );
+    Q_UNUSED( future );
 
     eventLoop.exec();
 
@@ -160,7 +164,7 @@ QString Manage::makeWindows()
     QEventLoop eventLoop;
     QString reply;
 
-    QtConcurrent::run( [ =, &eventLoop, &reply ]()
+    auto future = QtConcurrent::run( [ =, &eventLoop, &reply ]()
     {
         try
         {
@@ -176,6 +180,7 @@ QString Manage::makeWindows()
         reply = "OK";
         QMetaObject::invokeMethod( &eventLoop, "quit" );
     } );
+    Q_UNUSED( future );
 
     eventLoop.exec();
 
@@ -187,7 +192,7 @@ QString Manage::makeAndroid()
     QEventLoop eventLoop;
     QString reply;
 
-    QtConcurrent::run( [ this, &eventLoop, &reply ]()
+    auto future = QtConcurrent::run( [ this, &eventLoop, &reply ]()
     {
         try
         {
@@ -203,6 +208,7 @@ QString Manage::makeAndroid()
         reply = "OK";
         QMetaObject::invokeMethod( &eventLoop, "quit" );
     } );
+    Q_UNUSED( future );
 
     eventLoop.exec();
 
@@ -214,7 +220,7 @@ QString Manage::makePWA()
     QEventLoop eventLoop;
     QString reply;
 
-    QtConcurrent::run( [ this, &eventLoop, &reply ]()
+    auto future = QtConcurrent::run( [ this, &eventLoop, &reply ]()
     {
         try
         {
@@ -230,6 +236,7 @@ QString Manage::makePWA()
         reply = "OK";
         QMetaObject::invokeMethod( &eventLoop, "quit" );
     } );
+    Q_UNUSED( future );
 
     eventLoop.exec();
 
@@ -255,8 +262,15 @@ void Manage::generateOSXIconAssets()
     this->saveToPng( targetSavePath_ + "/OSX/icon.iconset/icon_512x512@2x.png", { 1024, 1024 } );
 
 #ifdef Q_OS_MAC
-    const auto escapedTargetSavePath = QString( targetSavePath_ ).replace( ' ', "\\ " );
-    system( QString( "iconutil -c icns " + escapedTargetSavePath + "/OSX/icon.iconset" ).toUtf8().data() );
+    const auto commandResult = QProcess::execute(
+                QStringLiteral( "iconutil" ),
+                {
+                    QStringLiteral( "-c" ),
+                    QStringLiteral( "icns" ),
+                    targetSavePath_ + QStringLiteral( "/OSX/icon.iconset" )
+                }
+            );
+    Q_UNUSED( commandResult );
 #endif
 }
 
@@ -451,7 +465,7 @@ void Manage::generateWindowsIconAsset()
         imageDataOffset += static_cast< quint32 >( iconDataSize );
     }
 
-    for ( const auto &iconImageData: std::as_const( iconImageDataList ) )
+    for ( const auto &iconImageData: static_cast< const QList< QByteArray > & >( iconImageDataList ) )
     {
         if ( iconStream.writeRawData( iconImageData.constData(), iconImageData.size() ) != iconImageData.size() )
         {

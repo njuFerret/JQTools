@@ -1,7 +1,5 @@
-﻿import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/Interface/"
+import QtQuick 2.7
+import JQControls 1.0
 import BinarySearchAssistant 1.0
 
 Item {
@@ -24,7 +22,7 @@ Item {
         anchors.centerIn: parent
         spacing: 10
 
-        MaterialTextField {
+        JQTextField {
             id: minField
             placeholderText: "最小值"
             validator: IntValidator {} // 确保输入的是整数
@@ -39,7 +37,7 @@ Item {
             }
         }
 
-        MaterialTextField {
+        JQTextField {
             id: maxField
             placeholderText: "最大值"
             validator: IntValidator {}
@@ -58,7 +56,7 @@ Item {
             height: 10
         }
 
-        MaterialButton {
+        JQButton {
             text: canStartGame ? (gameStarted ? "重新开始" : "开始游戏") : "最小值小于最大值才能开始"
             enabled: canStartGame
             onClicked: {
@@ -69,17 +67,17 @@ Item {
             }
         }
 
-        MaterialLabel {
+        JQText {
             text: gameStarted ? "我的猜测是：" + binarySearchAssistant.currentGuess : ""
         }
 
-        MaterialButton {
+        JQButton {
             text: "更高"
             enabled: gameStarted
             onClicked: binarySearchAssistantManage.targetIsHigher()
         }
 
-        MaterialButton {
+        JQButton {
             text: "更低"
             enabled: gameStarted
             onClicked: binarySearchAssistantManage.targetIsLower()

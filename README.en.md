@@ -2,19 +2,12 @@
 
 [中文](./README.md) | [English](./README.en.md)
 
-JQTools (Jason Qt Tools) is an open-source utility collection built with Qt, QML, and C++, focused on high-frequency tasks in daily development workflows.
+JQTools is an open-source development toolbox based on Qt/QML/C++, integrating common features such as text processing, cryptographic computing, image optimization, QR codes, and Qt utilities, with both desktop and online WASM builds for quickly handling high-frequency development tasks.
 
 - GitHub: https://github.com/188080501/JQTools
 - Latest release: https://github.com/188080501/JQTools/releases/latest
+- Online WASM build: https://web.jasonserver.com:10035/JQTools/JQTools.html
 - Issues & feature requests: https://github.com/188080501/JQTools/issues
-
-## Project Status (2026)
-
-The project is currently under refactoring and upgrades.
-
-- The project started in 2016 and is currently in a "10-year version" refactor stage.
-- Last stable version before refactoring: [V26.2.14](https://github.com/188080501/JQTools/releases/tag/V26.2.14)
-- New features and refactoring are first developed in the `develop` branch, then merged into `master` after stabilization.
 
 ## UI Preview
 
@@ -48,10 +41,16 @@ The project is currently under refactoring and upgrades.
 - String Sorter  
   Sort lines in text content in ascending or descending order.
 
+- Text Dedup Sorter  
+  Deduplicate and sort text at the character level, supporting ascending or descending output after deduplication for quick text cleanup.
+
 ### Calculation
 
 - Hash Calculator  
   Calculate common hash values such as SHA1 and MD5.
+
+- File Hash Calculator  
+  Select a single file and calculate MD5, SHA1, and SHA256 hashes.
 
 - Unix Timestamp Converter  
   Convert between Unix timestamps and date/time.
@@ -64,6 +63,9 @@ The project is currently under refactoring and upgrades.
 
 - RSA Encrypt/Decrypt  
   Support RSA public-key encryption (Base64 output) and private-key decryption (Base64 input).
+
+- AES Encrypt/Decrypt & HMAC  
+  Support AES-CBC encryption/decryption (Base64 I/O, PKCS#7 padding) and HMAC-SHA256 calculation.
 
 ### Image
 
@@ -126,31 +128,30 @@ The project is currently under refactoring and upgrades.
 
 Verified environment:
 
-- Windows 10/11
-- Qt 5.15.2
-- MSVC2019 64bit Kit
+- Qt 5.15.2 + MSVC2019
+- Qt 6.5.3 + MSVC2019
+- Qt 5.15.2 + Clang/x86
+- Qt 6.8.3 + WASM
 
 Compatibility notes:
 
-- Recommended minimum Qt version: Qt 5.15.
-- Qt 6.7.2 (including WASM) is being adapted progressively and is not fully completed yet.
+- Currently supported and verified on the 4 environments above.
 
 This project is a standard `qmake` project, with no extra generation scripts or preprocessing steps.
 
 Build entry:
 
-- Project file: `JQTools.pro`
+- Project file: `JQTools.pro` (top-level `subdirs` entry)
+- App subproject: `apps/JQToolsApp/JQToolsApp.pro`
 
 #### Option A: Build with Qt Creator (Recommended)
 
 1. Open Qt Creator and choose `File -> Open File or Project...`.
 2. Select `JQTools.pro` in the repository root.
-3. Choose `Desktop Qt 5.15.2 MSVC2019 64bit` kit (or an equivalent available kit on your machine).
+3. Choose kit.
 4. Click "Configure Project", then build and run directly.
 
 #### Option B: Build from Command Line (qmake)
-
-The example below is based on `Qt 5.15.2 + MSVC2019 64bit`:
 
 ```powershell
 mkdir build
@@ -172,7 +173,7 @@ Only a few third-party source libraries are used for specific features. The unif
 | JQQRCodeWriter | qrencode | QR code generation | `library/JQLibrary/JQQRCodeWriter.pri` |
 | JQZopfli | Zopfli + LodePNG | PNG lossless compression and related image processing | `library/JQLibrary/JQZopfli.pri` |
 | JQGuetzli | Guetzli + Butteraugli | JPG lossy compression | `library/JQLibrary/JQGuetzli.pri` |
-| JQMbedTLS | Mbed TLS | RSA key generation and encryption/decryption | `library/JQLibrary/JQMbedTLS.pri` |
+| JQMbedTLS | Mbed TLS | RSA key generation/encryption/decryption, AES and HMAC | `library/JQLibrary/JQMbedTLS.pri` |
 
 Additional notes:
 
@@ -183,7 +184,9 @@ Additional notes:
 
 ```text
 JQTools
-├─ cpp/           # App entry and core logic
+├─ apps/JQToolsApp/ # App subproject
+│  ├─ JQToolsApp.pro
+│  └─ cpp/         # App entry and core logic
 ├─ qml/           # Main UI and QML resources
 ├─ components/    # Feature modules (text, image, QR code, etc.)
 ├─ library/       # Third-party libraries and base wrappers

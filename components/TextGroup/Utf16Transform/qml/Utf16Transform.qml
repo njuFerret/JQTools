@@ -11,9 +11,7 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/Interface/"
+import JQControls 1.0
 import Utf16Transform 1.0
 
 Item {
@@ -27,61 +25,60 @@ Item {
         id: utf16TransformManage
     }
 
-    MaterialLabel {
-        x: 162
-        text:
-"Unicode 转义转换工具，可以将文本和 \\uXXXX 之间互转
-例如将 “中文” 与 “\\u4E2D\\u6587” 互转"
-        anchors.horizontalCenterOffset: -91
+    Row {
+        id: topRow
         anchors.top: parent.top
-        anchors.topMargin: 18
+        anchors.topMargin: 10
         anchors.horizontalCenter: parent.horizontalCenter
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-    }
+        spacing: 12
 
-    MaterialButton {
-        x: 420
-        width: 120
-        height: 40
-        text: "处理剪贴板内容"
-        anchors.horizontalCenterOffset: 160
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: 18
+        JQText {
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Unicode 转义转换工具，可将文本和 \\uXXXX 互转\n例如将 “中文” 与 “\\u4E2D\\u6587” 互转"
+            verticalAlignment: Text.AlignVCenter
+        }
 
-        onClicked: {
-            textFieldForSource.text = utf16TransformManage.clipboardText();
-            utf16TransformManage.setClipboardText( textFieldForTarget.text );
-            materialUI.showSnackbarMessage( "Unicode 转义字符串已经复制到了剪贴板" );
+        Item {
+            width: 50
+            height: 1
+        }
+
+        JQButton {
+            id: processClipboardButton
+            width: 140
+            text: "处理剪贴板"
+            anchors.verticalCenter: parent.verticalCenter
+
+            onClicked: {
+                textFieldForSource.text = utf16TransformManage.clipboardText();
+                utf16TransformManage.setClipboardText( textFieldForTarget.text );
+                JQGlobal.showMessage( "Unicode 转义字符串已经复制到剪贴板" );
+            }
         }
     }
 
-    MaterialLabel {
+    JQText {
         text: "文本字符串"
-        anchors.horizontalCenterOffset: 0
         anchors.bottom: itemForSource.top
         anchors.bottomMargin: 10
         anchors.horizontalCenter: itemForSource.horizontalCenter
         horizontalAlignment: Text.AlignHCenter
     }
 
-    RectangularGlow {
+    JQPane {
         z: -1
         anchors.fill: itemForSource
-        glowRadius: 6
-        spread: 0.22
-        color: "#20000000"
     }
 
     Item {
         id: itemForSource
         anchors.left: parent.left
         anchors.leftMargin: 10
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 10
-        width: (utf16Transform.width - 40) / 2
-        height: utf16Transform.height - 110
+        anchors.right: parent.right
+        anchors.rightMargin: 10
+        anchors.top: topRow.bottom
+        anchors.topMargin: 40
+        height: ( utf16Transform.height - topRow.height - 100 ) / 2
         clip: true
 
         Rectangle {
@@ -90,10 +87,8 @@ Item {
         }
 
         Flickable {
-            x: 5
-            y: 5
-            width: parent.width - 10
-            height: parent.height - 10
+            anchors.fill: parent
+            anchors.margins: 5
             contentWidth: textFieldForSource.paintedWidth
             contentHeight: textFieldForSource.paintedHeight
             clip: true
@@ -127,31 +122,28 @@ Item {
         }
     }
 
-    MaterialLabel {
+    JQText {
         text: "Unicode转义字符串"
-        anchors.horizontalCenterOffset: 0
         anchors.bottom: itemForTarget.top
         anchors.bottomMargin: 10
         anchors.horizontalCenter: itemForTarget.horizontalCenter
         horizontalAlignment: Text.AlignHCenter
     }
 
-    RectangularGlow {
+    JQPane {
         z: -1
         anchors.fill: itemForTarget
-        glowRadius: 6
-        spread: 0.22
-        color: "#20000000"
     }
 
     Item {
         id: itemForTarget
+        anchors.left: parent.left
+        anchors.leftMargin: 10
         anchors.right: parent.right
         anchors.rightMargin: 10
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 10
-        width: (utf16Transform.width - 40) / 2
-        height: utf16Transform.height - 110
+        height: ( utf16Transform.height - topRow.height - 90 ) / 2
         clip: true
 
         Rectangle {
@@ -160,10 +152,8 @@ Item {
         }
 
         Flickable {
-            x: 5
-            y: 5
-            width: parent.width - 10
-            height: parent.height - 10
+            anchors.fill: parent
+            anchors.margins: 5
             contentWidth: textFieldForTarget.paintedWidth
             contentHeight: textFieldForTarget.paintedHeight
             clip: true

@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of JQTools
 
     Project introduce: https://github.com/188080501/JQTools
@@ -11,9 +11,7 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/Interface/"
+import JQControls 1.0
 import BatchReplacement 1.0
 
 Item {
@@ -22,6 +20,7 @@ Item {
     height: 540
 
     property bool changingFlag: true
+    property bool loadingVisible: false
 
     Component.onCompleted: {
         changingFlag = false;
@@ -36,7 +35,7 @@ Item {
         width: 620
         height: 540
 
-        MaterialLabel {
+        JQText {
             x: 64
             y: 66
             text: "搜索的文件后缀"
@@ -45,64 +44,73 @@ Item {
         Column {
             x: 64
             y: 92
-            spacing: -10
+            spacing: 4
 
-            MaterialCheckBox {
+            JQCheckBox {
                 id: checkBoxForCpp
+                width: 300
                 text: "h/c/cc/cp/cpp/hpp/inc/i/ii/m"
                 checked: true
             }
 
-            MaterialCheckBox {
+            JQCheckBox {
                 id: checkBoxForQmake
+                width: 220
                 text: "pro/pri/prf/prl/qrc"
                 checked: true
             }
 
-            MaterialCheckBox {
+            JQCheckBox {
                 id: checkBoxForQml
+                width: 220
                 text: "qml"
                 checked: true
             }
 
-            MaterialCheckBox {
+            JQCheckBox {
                 id: checkBoxForUi
+                width: 220
                 text: "ui"
                 checked: true
             }
 
-            MaterialCheckBox {
+            JQCheckBox {
                 id: checkBoxForJsonAndXml
+                width: 220
                 text: "json/xml"
                 checked: true
             }
 
-            MaterialCheckBox {
+            JQCheckBox {
                 id: checkBoxForBatAndSh
+                width: 220
                 text: "bat/sh"
                 checked: true
             }
 
-            MaterialCheckBox {
+            JQCheckBox {
                 id: checkBoxForNoSuffixFile
+                width: 220
                 text: "无后缀文件"
                 checked: true
             }
 
-            MaterialCheckBox {
+            JQCheckBox {
                 id: checkBoxForFileAndDir
+                width: 220
                 text: "文件名/文件夹名"
                 checked: true
             }
 
-            MaterialCheckBox {
+            JQCheckBox {
                 id: checkBoxForMultiCase
+                width: 220
                 text: "匹配英文大小写"
                 checked: true
             }
         }
 
-        MaterialTextField {
+        JQTextField {
             id: textFieldForSourceKey
             x: 370
             y: 180
@@ -111,7 +119,7 @@ Item {
             text: ""
         }
 
-        MaterialTextField {
+        JQTextField {
             id: textFieldForTargetKey
             x: 370
             y: 270
@@ -120,27 +128,24 @@ Item {
             text: ""
         }
 
-        MaterialButton {
+        JQButton {
             x: 405
             y: 380
             width: 120
-            height: 40
             text: "开始替换"
 
             onClicked: {
                 if ( textFieldForSourceKey.text == "" )
                 {
-                    materialUI.showSnackbarMessage( "请输入替换关键字" );
+                    JQGlobal.showMessage( "请输入替换关键字" );
                     return;
                 }
 
                 if ( checkBoxForFileAndDir.checked && ( textFieldForTargetKey.text == "" ) )
                 {
-                    materialUI.showSnackbarMessage( "请输入目标值" );
+                    JQGlobal.showMessage( "请输入目标值" );
                     return;
                 }
-
-                materialUI.showLoading();
 
                 var suffixes = new Array;
 
@@ -199,28 +204,45 @@ Item {
                     suffixes.push( "FileNameAndDirName" );
                 }
 
-                var reply = batchReplacementManage.startBatchReplacement(
+                batchReplacement.loadingVisible = true;
+
+                var reply = batchReplacementManage.previewBatchReplacement(
                             suffixes,
                             textFieldForSourceKey.text,
-                            textFieldForTargetKey.text,
                             checkBoxForMultiCase.checked
                         );
+                batchReplacement.loadingVisible = false;
 
                 if ( "cancel" in reply )
                 {
-                    materialUI.showSnackbarMessage( "用户取消操作" );
-                    materialUI.hideLoading();
+                    JQGlobal.showMessage( "用户取消操作" );
                     return;
                 }
 
-                labelForReplacementSummary.fileCount = reply[ "fileCount" ];
-                labelForReplacementSummary.replacementCount = reply[ "replacementCount" ];
+                if ( "error" in reply )
+                {
+                    JQGlobal.showMessage( qsTr( "预搜索失败" ) );
+                    return;
+                }
 
-                materialUI.hideLoading();
+                if ( reply[ "replacementCount" ] <= 0 )
+                {
+                    JQGlobal.showMessage( qsTr( "未搜索到可替换内容" ) );
+                    return;
+                }
+
+                dialogForConfirm.directoryPath = reply[ "directoryPath" ];
+                dialogForConfirm.suffixes = suffixes;
+                dialogForConfirm.sourceKey = textFieldForSourceKey.text;
+                dialogForConfirm.targetKey = textFieldForTargetKey.text;
+                dialogForConfirm.multiCase = checkBoxForMultiCase.checked;
+                dialogForConfirm.fileCount = reply[ "fileCount" ];
+                dialogForConfirm.replacementCount = reply[ "replacementCount" ];
+                dialogForConfirm.open();
             }
         }
 
-        MaterialLabel {
+        JQText {
             id: labelForReplacementSummary
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.horizontalCenterOffset: 150
@@ -232,6 +254,130 @@ Item {
 
             property int fileCount: 0
             property int replacementCount: 0
+        }
+
+        JQDialog {
+            id: dialogForConfirm
+            title: qsTr( "确认替换" )
+            destroyOnClosed: false
+            centerItem: dialogContentForConfirm
+
+            property string directoryPath: ""
+            property var suffixes: [ ]
+            property string sourceKey: ""
+            property string targetKey: ""
+            property bool multiCase: false
+            property int fileCount: 0
+            property int replacementCount: 0
+
+            function startReplacement() {
+                batchReplacement.loadingVisible = true;
+
+                var reply = batchReplacementManage.startBatchReplacement(
+                            directoryPath,
+                            suffixes,
+                            sourceKey,
+                            targetKey,
+                            multiCase
+                        );
+
+                batchReplacement.loadingVisible = false;
+
+                if ( "error" in reply )
+                {
+                    JQGlobal.showMessage( qsTr( "替换失败，请检查参数" ) );
+                    return;
+                }
+
+                labelForReplacementSummary.fileCount = reply[ "fileCount" ];
+                labelForReplacementSummary.replacementCount = reply[ "replacementCount" ];
+                var failedOperationCount = ("failedOperationCount" in reply) ? reply[ "failedOperationCount" ] : 0;
+
+                if ( failedOperationCount > 0 )
+                {
+                    var failedMessage = qsTr( "替换完成，但有 " ) + failedOperationCount + qsTr( " 个操作失败" );
+
+                    if ( ("failedPaths" in reply) && reply[ "failedPaths" ].length > 0 )
+                    {
+                        failedMessage += "\n" + qsTr( "示例：" ) + reply[ "failedPaths" ][ 0 ];
+                    }
+
+                    JQGlobal.showMessage( failedMessage );
+                }
+                else
+                {
+                    JQGlobal.showMessage( qsTr( "替换完成" ) );
+                }
+            }
+
+            Column {
+                id: dialogContentForConfirm
+                width: 460
+                spacing: 12
+
+                JQText {
+                    width: parent.width
+                    text: qsTr( "已完成粗略搜索，是否开始执行替换？" )
+                    wrapMode: Text.WordWrap
+                }
+
+                JQText {
+                    width: parent.width
+                    text: qsTr( "目录：" ) + dialogForConfirm.directoryPath
+                    wrapMode: Text.WrapAnywhere
+                }
+
+                JQText {
+                    width: parent.width
+                    text: qsTr( "预计影响文件数：" ) + dialogForConfirm.fileCount
+                }
+
+                JQText {
+                    width: parent.width
+                    text: qsTr( "预计替换处数：" ) + dialogForConfirm.replacementCount
+                }
+
+                Row {
+                    width: parent.width
+                    spacing: 10
+                    layoutDirection: Qt.RightToLeft
+
+                    JQButton {
+                        width: 100
+                        text: qsTr( "确定" )
+
+                        onClicked: {
+                            dialogForConfirm.close();
+                            dialogForConfirm.startReplacement();
+                        }
+                    }
+
+                    JQButton {
+                        width: 100
+                        text: qsTr( "取消" )
+
+                        onClicked: {
+                            dialogForConfirm.close();
+                        }
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            z: 999
+            visible: batchReplacement.loadingVisible
+            color: "#55000000"
+
+            JQLoadingIndicator {
+                anchors.centerIn: parent
+                text: "处理中..."
+            }
+
+            MouseArea {
+                anchors.fill: parent
+            }
         }
     }
 }

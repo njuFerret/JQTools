@@ -15,16 +15,20 @@
 
 // CalculateGroup lib import
 #include <HashCalculate>
+#include <FileHashCalculate>
 #include <TimestampTransform>
 #include <BinarySearchAssistant>
 #include <RsaKeyGenerate>
 #include <RsaCrypt>
+#include <AesCrypt>
 
 #define CALCULATEGROUP_INITIALIZA \
     HASHCALCULATE_INITIALIZA; \
+    FILEHASHCALCULATE_INITIALIZA; \
     TIMESTAMPTRANSFORM_INITIALIZA;\
     BINARYSEARCHASSISTANT_INITIALIZA; \
     RSAKEYGENERATE_INITIALIZA; \
-    RSACRYPT_INITIALIZA;
+    RSACRYPT_INITIALIZA; \
+    AESCRYPT_INITIALIZA;
 
 #endif//CALCULATEGROUP_CALCULATEGROUP_H_

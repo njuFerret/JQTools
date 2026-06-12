@@ -11,39 +11,25 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/"
-import "qrc:/MaterialUI/Interface/"
+import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15
+import JQControls 1.0
 import "qrc:/BookmarkData.js" as BookmarkData
 
-ApplicationWindow {
+JQWindow {
     id: applicationWindow
-    title: "JQTools"
     width: 960
     height: 720
-    visible: true
-    opacity: 0
-    color: "#fafafa"
-
     minimumWidth: 800
     minimumHeight: 600
+    visible: true
+    title: "JQTools"
+    color: "#fafafa"
 
     Component.onCompleted: {
         mainPageContains.showPage( "首页", "qrc:/Welcome/Welcome.qml" );
 
-        opacityAnimation.start();
-
-        bookmarkListView.refresh( BookmarkData.items );
-    }
-
-    NumberAnimation {
-        id: opacityAnimation
-        target: applicationWindow
-        property: "opacity"
-        easing.type: Easing.OutCubic
-        duration: 300
-        to: 1
+        bookmarkListView.refresh( BookmarkData.itemsByPlatform( Qt.platform.os ) );
     }
 
     Rectangle {
@@ -54,15 +40,11 @@ ApplicationWindow {
         height: 64
     }
 
-    RectangularGlow {
+    JQPane {
         x: 180
         z: -1
         width: parent.width - 180
         height: 64
-        glowRadius: 5
-        spread: 0.22
-        color: "#30000000"
-        cornerRadius: 3
     }
 
     Rectangle {
@@ -72,14 +54,14 @@ ApplicationWindow {
         height: 64
         color: "#2196F3"
 
-        MaterialLabel {
+        JQText {
             id: currentItemTitleNameLabel
             x: 60
             z: 1
             height: 64
             font.pixelSize: 20
             verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.Left
+            horizontalAlignment: Text.AlignLeft
             color: "#ffffff"
         }
     }
@@ -93,7 +75,7 @@ ApplicationWindow {
         color: "#e1e1e1"
     }
 
-    MaterialLabel {
+    JQText {
         z: 1
         width: 180
         height: 64
@@ -173,13 +155,17 @@ ApplicationWindow {
                         width: bookmarkListView.width
                         height: 42
 
-                        MaterialButton {
+                        JQButton {
+                            id: secondLevelButton
                             anchors.fill: parent
-                            elevation: 0
                             text: ""
                             visible: secondBookmarkListView.y === 0
+                            padding: 0
+                            topInset: 0
+                            bottomInset: 0
+                            Material.background: "#00000000"
 
-                            MaterialLabel {
+                            JQText {
                                 x: 36
                                 height: parent.height
                                 text: bookmarkName
@@ -200,7 +186,7 @@ ApplicationWindow {
                             color: "#ffffff"
                             visible: secondBookmarkListView.y !== 0
 
-                            MaterialLabel {
+                            JQText {
                                 x: 36
                                 height: parent.height
                                 text: bookmarkName
@@ -212,11 +198,15 @@ ApplicationWindow {
                 }
             }
 
-            MaterialButton {
+            JQButton {
+                id: firstLevelButton
                 width: parent.width
                 height: 42
-                elevation: 0
-                textHorizontalAlignment: Text.AlignLeft
+                text: ""
+                padding: 0
+                topInset: 0
+                bottomInset: 0
+                Material.background: "#00000000"
 
                 onClicked: {
                     mainPageContains.showPage( titleName, itemQrcLocation );
@@ -236,11 +226,12 @@ ApplicationWindow {
                     }
                 }
 
-                MaterialLabel {
+                JQText {
                     x: 18
                     height: parent.height
                     text: bookmarkName
-                    font.bold: true
+                    font.bold: false
+                    font.weight: Font.Normal
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 16
                     color: ( currentItemTitleNameLabel.text === titleName ) ? ( "#1e88e5" ) : ( "#000000" )
@@ -266,9 +257,9 @@ ApplicationWindow {
 
         MouseArea {
             anchors.fill: parent
-            acceptedButtons: Qt.MidButton
+            acceptedButtons: Qt.MiddleButton
 
-            onWheel: {
+            onWheel: function(wheel) {
                 bookmarkListView.contentY -= wheel.angleDelta.y;
 
                 if ( bookmarkListView.contentY < 0 )
@@ -340,8 +331,19 @@ ApplicationWindow {
 
                             if ( component.status === Component.Ready ) {
                                 var page = component.createObject( mainPageContains );
-                                page.anchors.fill = mainPageContains;
-                                mainPageContains.pages[ itemQrcLocation ] = page;
+                                if ( page )
+                                {
+                                    page.anchors.fill = mainPageContains;
+                                    mainPageContains.pages[ itemQrcLocation ] = page;
+                                }
+                                else
+                                {
+                                    print( "[main] createObject failed:", itemQrcLocation, component.errorString() );
+                                }
+                            }
+                            else
+                            {
+                                print( "[main] createComponent failed:", itemQrcLocation, component.errorString() );
                             }
                         }
 
@@ -351,7 +353,14 @@ ApplicationWindow {
                         }
 
                         currentItemTitleNameLabel.text = titleName;
-                        mainPageContains.pages[ itemQrcLocation ].visible = true;
+                        if ( itemQrcLocation in mainPageContains.pages )
+                        {
+                            mainPageContains.pages[ itemQrcLocation ].visible = true;
+                        }
+                        else
+                        {
+                            print( "[main] page not loaded:", itemQrcLocation );
+                        }
 
                         break;
                 }
@@ -359,11 +368,4 @@ ApplicationWindow {
         }
     }
 
-    MaterialUI {
-        id: materialUI
-        z: 2
-        anchors.fill: parent
-        dialogCancelText: "取消"
-        dialogOKText: "确定"
-    }
 }

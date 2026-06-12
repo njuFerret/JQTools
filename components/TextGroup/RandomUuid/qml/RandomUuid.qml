@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of JQTools
 
     Project introduce: https://github.com/188080501/JQTools
@@ -11,9 +11,7 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/Interface/"
+import JQControls 1.0
 import RandomUuid 1.0
 
 Item {
@@ -31,51 +29,47 @@ Item {
         id: randomUuidManage
     }
 
-    Item {
+    Column {
         anchors.centerIn: parent
-        width: 620
-        height: 540
+        width: 540
+        spacing: 22
 
-        MaterialTextField {
-            id: textFieldForUuid
-            x: 40
-            y: 317
-            width: 540
-            placeholderText: "随机UUID"
-        }
-
-        MaterialCheckBox {
+        JQCheckBox {
             id: checkBoxForNumber
-            x: 34
-            y: 181
             text: "包括大括号"
             checked: false
         }
 
-        MaterialButton {
-            x: 40
-            y: 259
-            width: 120
-            text: "随机UUID"
+        Row {
+            spacing: 12
 
-            onClicked: {
-                textFieldForUuid.text = randomUuidManage.randomUuid(
-                                checkBoxForNumber.checked
-                            );
-                materialUI.showSnackbarMessage( "随机UUID已经生成" );
+            JQButton {
+                width: 120
+                text: "随机UUID"
+
+                onClicked: {
+                    textFieldForUuid.text = randomUuidManage.randomUuid(
+                                    checkBoxForNumber.checked
+                                );
+                    JQGlobal.showMessage( "随机UUID已经生成" );
+                }
+            }
+
+            JQButton {
+                width: 140
+                text: "复制到剪贴板"
+
+                onClicked: {
+                    randomUuidManage.setClipboardText( textFieldForUuid.text );
+                    JQGlobal.showMessage( "UUID已经复制到了剪贴板" );
+                }
             }
         }
 
-        MaterialButton {
-            x: 166
-            y: 259
-            width: 120
-            text: "复制到剪贴板"
-
-            onClicked: {
-                randomUuidManage.setClipboardText( textFieldForUuid.text );
-                materialUI.showSnackbarMessage( "UUID已经复制到了剪贴板" );
-            }
+        JQTextField {
+            id: textFieldForUuid
+            width: parent.width
+            placeholderText: "随机UUID"
         }
     }
 }

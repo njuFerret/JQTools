@@ -11,10 +11,7 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import QtQuick.Dialogs 1.3
-import "qrc:/MaterialUI/Interface/"
+import JQControls 1.0
 import RgbStringTransform 1.0
 
 
@@ -33,167 +30,164 @@ Item {
         id: rgbStringTransformManage
     }
 
-    Item {
+    Column {
         anchors.centerIn: parent
-        width: 620
-        height: 540
+        width: 520
+        spacing: 14
 
-        MaterialTextField {
-            id: textFieldForColorName
-            x: 202
-            y: 124
-            width: 100
-            text: "white"
-            placeholderText: "颜色描述"
+        Row {
+            spacing: 16
 
-            onTextChanged: {
-                if ( rgbStringTransform.changingFlag ) { return; }
+            Column {
+                spacing: 14
 
-                rgbStringTransform.changingFlag = true;
+                JQTextField {
+                    id: textFieldForColorName
+                    width: 180
+                    text: "white"
+                    placeholderText: "颜色描述"
 
-                textFieldForHexString.text = rgbStringTransformManage.getHexStringFromColorName( textFieldForColorName.text );
-                textFieldForRed.text = rgbStringTransformManage.getRed( textFieldForHexString.text );
-                textFieldForGreen.text = rgbStringTransformManage.getGreen( textFieldForHexString.text );
-                textFieldForBlue.text = rgbStringTransformManage.getBlue( textFieldForHexString.text );
+                    onTextChanged: {
+                        if ( rgbStringTransform.changingFlag ) { return; }
 
-                rgbStringTransform.changingFlag = false;
+                        rgbStringTransform.changingFlag = true;
+
+                        textFieldForHexString.text = rgbStringTransformManage.getHexStringFromColorName( textFieldForColorName.text );
+                        textFieldForRed.text = rgbStringTransformManage.getRed( textFieldForHexString.text );
+                        textFieldForGreen.text = rgbStringTransformManage.getGreen( textFieldForHexString.text );
+                        textFieldForBlue.text = rgbStringTransformManage.getBlue( textFieldForHexString.text );
+
+                        rgbStringTransform.changingFlag = false;
+                    }
+                }
+
+                Row {
+                    spacing: 12
+
+                    Rectangle {
+                        width: 25
+                        height: 25
+                        color: textFieldForHexString.text
+                        border.width: 1
+                        border.color: "#000000"
+                    }
+
+                    JQTextField {
+                        id: textFieldForHexString
+                        width: 180
+                        placeholderText: "颜色十六进制字符串"
+                        text: "#ffffff"
+
+                        onTextChanged: {
+                            if ( rgbStringTransform.changingFlag ) { return; }
+
+                            rgbStringTransform.changingFlag = true;
+
+                            textFieldForColorName.text = "";
+                            textFieldForRed.text = rgbStringTransformManage.getRed( textFieldForHexString.text );
+                            textFieldForGreen.text = rgbStringTransformManage.getGreen( textFieldForHexString.text );
+                            textFieldForBlue.text = rgbStringTransformManage.getBlue( textFieldForHexString.text );
+
+                            rgbStringTransform.changingFlag = false;
+                        }
+                    }
+                }
+
+                Row {
+                    spacing: 6
+
+                    JQTextField {
+                        id: textFieldForRed
+                        placeholderText: "红(R)"
+                        width: 60
+                        text: "255"
+
+                        onTextChanged: {
+                            if ( rgbStringTransform.changingFlag ) { return; }
+
+                            rgbStringTransform.changingFlag = true;
+
+                            textFieldForColorName.text = "";
+                            textFieldForHexString.text = rgbStringTransformManage.getHexString( textFieldForRed.text, textFieldForGreen.text, textFieldForBlue.text );
+
+                            rgbStringTransform.changingFlag = false;
+                        }
+                    }
+
+                    JQTextField {
+                        id: textFieldForGreen
+                        placeholderText: "绿(G)"
+                        width: 60
+                        text: "255"
+
+                        onTextChanged: {
+                            if ( rgbStringTransform.changingFlag ) { return; }
+
+                            rgbStringTransform.changingFlag = true;
+
+                            textFieldForColorName.text = "";
+                            textFieldForHexString.text = rgbStringTransformManage.getHexString( textFieldForRed.text, textFieldForGreen.text, textFieldForBlue.text );
+
+                            rgbStringTransform.changingFlag = false;
+                        }
+                    }
+
+                    JQTextField {
+                        id: textFieldForBlue
+                        placeholderText: "蓝(B)"
+                        width: 60
+                        text: "255"
+
+                        onTextChanged: {
+                            if ( rgbStringTransform.changingFlag ) { return; }
+
+                            rgbStringTransform.changingFlag = true;
+
+                            textFieldForColorName.text = "";
+                            textFieldForHexString.text = rgbStringTransformManage.getHexString( textFieldForRed.text, textFieldForGreen.text, textFieldForBlue.text );
+
+                            rgbStringTransform.changingFlag = false;
+                        }
+                    }
+                }
             }
-        }
 
-        MaterialTextField {
-            id: textFieldForHexString
-            x: 202
-            y: 214
-            placeholderText: "颜色十六进制字符串"
-            width: 100
-            text: "#ffffff"
+            Column {
+                spacing: 12
 
-            onTextChanged: {
-                if ( rgbStringTransform.changingFlag ) { return; }
+                JQButton {
+                    width: 140
+                    text: "颜色对话框"
 
-                rgbStringTransform.changingFlag = true;
+                    onClicked: {
+                        const chosenHexString = rgbStringTransformManage.getHexStringFromColorDialog(
+                                    textFieldForHexString.text
+                                );
+                        if ( chosenHexString === "" ) { return; }
+                        textFieldForHexString.text = chosenHexString;
+                    }
+                }
 
-                textFieldForColorName.text = "";
-                textFieldForRed.text = rgbStringTransformManage.getRed( textFieldForHexString.text );
-                textFieldForGreen.text = rgbStringTransformManage.getGreen( textFieldForHexString.text );
-                textFieldForBlue.text = rgbStringTransformManage.getBlue( textFieldForHexString.text );
+                JQButton {
+                    width: 140
+                    text: "从剪贴板粘贴"
 
-                rgbStringTransform.changingFlag = false;
+                    onClicked: {
+                        textFieldForHexString.text = rgbStringTransformManage.clipboardText();
+                        JQGlobal.showMessage( "已从剪贴板粘贴颜色字符串" );
+                    }
+                }
+
+                JQButton {
+                    width: 140
+                    text: "复制到剪贴板"
+
+                    onClicked: {
+                        rgbStringTransformManage.setClipboardText( textFieldForHexString.text );
+                        JQGlobal.showMessage( "颜色十六进制字符串已经复制到了剪贴板" );
+                    }
+                }
             }
-        }
-
-        MaterialTextField {
-            id: textFieldForRed
-            x: 156
-            y: 313
-            placeholderText: "红(R)"
-            width: 60
-            text: "255"
-
-            onTextChanged: {
-                if ( rgbStringTransform.changingFlag ) { return; }
-
-                rgbStringTransform.changingFlag = true;
-
-                textFieldForColorName.text = "";
-                textFieldForHexString.text = rgbStringTransformManage.getHexString( textFieldForRed.text, textFieldForGreen.text, textFieldForBlue.text );
-
-                rgbStringTransform.changingFlag = false;
-            }
-        }
-
-        MaterialTextField {
-            id: textFieldForGreen
-            x: 222
-            y: 313
-            placeholderText: "绿(G)"
-            width: 60
-            text: "255"
-
-            onTextChanged: {
-                if ( rgbStringTransform.changingFlag ) { return; }
-
-                rgbStringTransform.changingFlag = true;
-
-                textFieldForColorName.text = "";
-                textFieldForHexString.text = rgbStringTransformManage.getHexString( textFieldForRed.text, textFieldForGreen.text, textFieldForBlue.text );
-
-                rgbStringTransform.changingFlag = false;
-            }
-        }
-
-        MaterialTextField {
-            id: textFieldForBlue
-            x: 288
-            y: 313
-            placeholderText: "蓝(B)"
-            width: 60
-            text: "255"
-
-            onTextChanged: {
-                if ( rgbStringTransform.changingFlag ) { return; }
-
-                rgbStringTransform.changingFlag = true;
-
-                textFieldForColorName.text = "";
-                textFieldForHexString.text = rgbStringTransformManage.getHexString( textFieldForRed.text, textFieldForGreen.text, textFieldForBlue.text );
-
-                rgbStringTransform.changingFlag = false;
-            }
-        }
-
-        MaterialButton {
-            x: 387
-            y: 130
-            width: 120
-            text: "颜色对话框获取"
-
-            onClicked: {
-                colorDialog.open();
-            }
-        }
-
-        ColorDialog {
-            id: colorDialog
-            title: "选择一个颜色"
-            onAccepted: {
-                textFieldForHexString.text = rgbStringTransformManage.getHexString(colorDialog.color);
-                materialUI.showSnackbarMessage( "已从颜色对话框获取颜色" );
-            }
-        }
-
-        MaterialButton {
-            x: 387
-            y: 209
-            width: 120
-            text: "从剪贴板粘贴"
-
-            onClicked: {
-                textFieldForHexString.text = rgbStringTransformManage.clipboardText();
-                materialUI.showSnackbarMessage( "已从剪贴板粘贴颜色字符串" );
-            }
-        }
-
-        MaterialButton {
-            x: 387
-            y: 276
-            width: 120
-            text: "复制到剪贴板"
-
-            onClicked: {
-                rgbStringTransformManage.setClipboardText( textFieldForHexString.text );
-                materialUI.showSnackbarMessage( "颜色十六进制字符串已经复制到了剪贴板" );
-            }
-        }
-
-        Rectangle {
-            x: 165
-            y: 252
-            width: 25
-            height: 25
-            color: textFieldForHexString.text
-            border.width: 1
-            border.color: "#000000"
         }
     }
 }

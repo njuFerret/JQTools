@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of JQTools
 
     Project introduce: https://github.com/188080501/JQTools
@@ -11,11 +11,8 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-
-import "qrc:/MaterialUI/Interface/"
+import JQControls 1.0
 import ScreenColorPicker 1.0
-
 
 Item {
     id: screenColorPicker
@@ -25,7 +22,6 @@ Item {
     ScreenColorPickerManage {
         id: screenColorPickerManage
     }
-
 
     Item{
         anchors.centerIn: parent
@@ -39,37 +35,42 @@ Item {
             }
         }
 
-        Rectangle{
+        Rectangle {
             id: colorlabel
+            x: 130
+            y: 220
             width: 70
             height: pickerButton.height
-            x: 150
-            y: 220
             border.color: "black"
             color: "blue"
         }
 
-        MaterialTextField{
-            x: 150
-            y: 260
+        JQTextField {
+            x: 130
+            y: colorlabel.y + colorlabel.height + 10
             text: colorlabel.color
-            width: colorlabel.width
+            width: 120
         }
 
-        MaterialButton {
-            x: 300
+        JQButton {
+            x: 320
             y: 290
+            width: 120
             text: "复制代码"
+
             onClicked: {
                 screenColorPickerManage.copyColorToClipboard();
+                JQGlobal.showMessage( qsTr( "复制完成" ) );
             }
         }
 
-        MaterialButton {
+        JQButton {
             id: pickerButton
-            x: 300
+            x: 320
             y: 220
+            width: 120
             text: "打开拾色器"
+
             onClicked: {
                 screenColorPickerManage.openPicker();
             }

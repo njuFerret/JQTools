@@ -2,19 +2,12 @@
 
 [中文](./README.md) | [English](./README.en.md)
 
-JQTools（Jason Qt Tools）是一个基于 Qt & QML & C++ 开发的开源工具集合，聚焦于开发过程中的高频小功能。
+JQTools 是一个基于 Qt/QML/C++ 的开源开发工具箱，集成文本处理、加密计算、图片优化、二维码与 Qt 辅助等常用功能，并提供桌面端与在线 WASM 版本，便于在开发过程中快速处理高频小任务。
 
 - GitHub: https://github.com/188080501/JQTools
 - 最新版下载: https://github.com/188080501/JQTools/releases/latest
+- 在线 WASM 版本: https://web.jasonserver.com:10035/JQTools/JQTools.html
 - 问题反馈 & 功能建议: https://github.com/188080501/JQTools/issues
-
-## 项目状态（2026）
-
-项目正在进行重构与升级。
-
-- 项目始于 2016 年，当前正在进行十年版本重构。
-- 重构前最后一个稳定版本: [V26.2.14](https://github.com/188080501/JQTools/releases/tag/V26.2.14)
-- 新功能与重构代码优先在 `develop` 分支推进，稳定后再合并至 `master`。
 
 ## 界面预览
 
@@ -48,10 +41,16 @@ JQTools（Jason Qt Tools）是一个基于 Qt & QML & C++ 开发的开源工具�
 - 字符串排序  
   按行对字符串内容进行排序，支持升序和降序。
 
+- 文本去重排序  
+  按字符维度去重并排序，支持去重后按升序或降序输出，便于快速整理文本内容。
+
 ### 计算类
 
 - HASH 计算器  
   计算常用的摘要值，如 SHA1、MD5。
+
+- 文件哈希值  
+  选择单个文件并计算 MD5、SHA1 与 SHA256 哈希值。
 
 - Unix 时间戳转换  
   Unix 时间戳与日期转换。
@@ -64,6 +63,9 @@ JQTools（Jason Qt Tools）是一个基于 Qt & QML & C++ 开发的开源工具�
 
 - RSA 加解密  
   支持使用 RSA 公钥加密（输出 Base64 密文）和私钥解密（输入 Base64 密文）。
+
+- AES 加解密 & HMAC  
+  支持 AES-CBC 加密/解密（Base64 输入输出，PKCS#7 填充）以及 HMAC-SHA256 计算。
 
 ### 图片类
 
@@ -126,31 +128,30 @@ JQTools（Jason Qt Tools）是一个基于 Qt & QML & C++ 开发的开源工具�
 
 当前已验证环境：
 
-- Windows 10/11
-- Qt 5.15.2
-- MSVC2019 64bit Kit
+- Qt 5.15.2 + MSVC2019
+- Qt 6.5.3 + MSVC2019
+- Qt 5.15.2 + Clang/x86
+- Qt 6.8.3 + WASM
 
 兼容性说明：
 
-- 建议最低使用 Qt 5.15。
-- Qt 6.7.2（含 WASM）正在逐步适配中，尚未全部完成。
+- 当前已支持并验证以上 4 套构建环境。
 
 本项目是标准 `qmake` 工程，无额外生成脚本或预处理步骤。
 
 构建入口：
 
-- 工程文件: `JQTools.pro`
+- 工程文件: `JQTools.pro`（顶层 `subdirs` 入口）
+- 应用子工程: `apps/JQToolsApp/JQToolsApp.pro`
 
 #### 方式 A：使用 Qt Creator（推荐）
 
 1. 打开 Qt Creator，选择 `File -> Open File or Project...`。
 2. 选择仓库根目录下的 `JQTools.pro`。
-3. 在 Kit 中选择 `Desktop Qt 5.15.2 MSVC2019 64bit`（或本机可用的等效 Kit）。
+3. 选择 Kit。
 4. 点击“配置项目”后直接构建并运行。
 
 #### 方式 B：使用命令行（qmake）
-
-以下示例基于 `Qt 5.15.2 + MSVC2019 64bit`：
 
 ```powershell
 mkdir build
@@ -172,7 +173,7 @@ JQTools 的程序主体（界面、交互、功能编排）基于 Qt/QML/C++ 实
 | JQQRCodeWriter | qrencode | 二维码生成 | `library/JQLibrary/JQQRCodeWriter.pri` |
 | JQZopfli | Zopfli + LodePNG | PNG 无损压缩及相关图片处理 | `library/JQLibrary/JQZopfli.pri` |
 | JQGuetzli | Guetzli + Butteraugli | JPG 有损压缩 | `library/JQLibrary/JQGuetzli.pri` |
-| JQMbedTLS | Mbed TLS | RSA 密钥生成与加解密 | `library/JQLibrary/JQMbedTLS.pri` |
+| JQMbedTLS | Mbed TLS | RSA 密钥生成与加解密，AES 与 HMAC | `library/JQLibrary/JQMbedTLS.pri` |
 
 补充说明：
 
@@ -183,7 +184,9 @@ JQTools 的程序主体（界面、交互、功能编排）基于 Qt/QML/C++ 实
 
 ```text
 JQTools
-├─ cpp/           # 应用入口与核心逻辑
+├─ apps/JQToolsApp/ # 应用子工程
+│  ├─ JQToolsApp.pro
+│  └─ cpp/         # 应用入口与核心逻辑
 ├─ qml/           # 主界面与QML资源
 ├─ components/    # 各功能模块（文本、图片、二维码等）
 ├─ library/       # 三方库与基础库封装

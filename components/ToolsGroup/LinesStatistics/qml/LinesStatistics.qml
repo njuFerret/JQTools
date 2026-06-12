@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of JQTools
 
     Project introduce: https://github.com/188080501/JQTools
@@ -11,9 +11,7 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/Interface/"
+import JQControls 1.0
 import LinesStatistics 1.0
 
 Item {
@@ -22,6 +20,7 @@ Item {
     height: 540
 
     property bool changingFlag: true
+    property bool loadingVisible: false
 
     Component.onCompleted: {
         changingFlag = false;
@@ -36,49 +35,76 @@ Item {
         width: 620
         height: 540
 
-        MaterialLabel {
+        JQText {
             x: 64
             y: 136
             text: "搜索的文件后缀"
         }
 
-        MaterialCheckBox {
+        JQCheckBox {
             id: checkBoxForCpp
             x: 64
             y: 162
+            width: 300
             text: "h/c/cc/cp/cpp/hpp/inc/i/ii/m"
             checked: true
         }
 
-        MaterialCheckBox {
+        JQCheckBox {
             id: checkBoxForQmake
             x: 64
             y: 222
+            width: 220
             text: "pro/pri/prf/prl"
             checked: true
         }
 
-        MaterialCheckBox {
+        JQCheckBox {
             id: checkBoxForQml
             x: 64
             y: 282
+            width: 120
             text: "qml"
             checked: true
         }
 
-        MaterialCheckBox {
+        JQCheckBox {
             id: checkBoxForImage
             x: 64
             y: 342
+            width: 340
             text: "png/jpg/jpeg/bmp/gif/svg/psd/ai"
             checked: false
         }
 
-        MaterialButton {
+        JQText {
+            x: 64
+            y: 396
+            text: "过滤特殊目录"
+        }
+
+        JQCheckBox {
+            id: checkBoxForIgnoreBuild
+            x: 64
+            y: 422
+            width: 120
+            text: "build"
+            checked: true
+        }
+
+        JQCheckBox {
+            id: checkBoxForIgnoreGit
+            x: 64
+            y: 462
+            width: 120
+            text: ".git"
+            checked: true
+        }
+
+        JQButton {
             x: 254
             y: 278
             width: 120
-            height: 40
             text: "开始统计"
             anchors.horizontalCenterOffset: 134
             anchors.verticalCenterOffset: 32
@@ -86,7 +112,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             onClicked: {
-                materialUI.showLoading();
+                linesStatistics.loadingVisible = true;
 
                 var suffixes = new Array;
 
@@ -129,23 +155,33 @@ Item {
                     suffixes.push( "ai" );
                 }
 
-                var reply = linesStatisticsManage.collectLineStatistics( suffixes );
+                var ignoredDirectoryNames = new Array;
+
+                if ( checkBoxForIgnoreBuild.checked )
+                {
+                    ignoredDirectoryNames.push( "build" );
+                }
+
+                if ( checkBoxForIgnoreGit.checked )
+                {
+                    ignoredDirectoryNames.push( ".git" );
+                }
+
+                var reply = linesStatisticsManage.collectLineStatistics( suffixes, ignoredDirectoryNames );
+                linesStatistics.loadingVisible = false;
 
                 if ( "cancel" in reply )
                 {
-                    materialUI.showSnackbarMessage( "用户取消操作" );
-                    materialUI.hideLoading();
+                    JQGlobal.showMessage( "用户取消操作" );
                     return;
                 }
 
                 labelForLinesCount.fileCount = reply[ "fileCount" ];
                 labelForLinesCount.lineCount = reply[ "lineCount" ];
-
-                materialUI.hideLoading();
             }
         }
 
-        MaterialLabel {
+        JQText {
             id: labelForLinesCount
             text: "文件数：" + fileCount + "\n代码行数：" + lineCount
             anchors.horizontalCenterOffset: 134
@@ -157,6 +193,22 @@ Item {
 
             property int fileCount: 0
             property int lineCount: 0
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            z: 999
+            visible: linesStatistics.loadingVisible
+            color: "#55000000"
+
+            JQLoadingIndicator {
+                anchors.centerIn: parent
+                text: "处理中..."
+            }
+
+            MouseArea {
+                anchors.fill: parent
+            }
         }
     }
 }

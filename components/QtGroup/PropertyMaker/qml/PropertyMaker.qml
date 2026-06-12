@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of JQTools
 
     Project introduce: https://github.com/188080501/JQTools
@@ -11,9 +11,7 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/Interface/"
+import JQControls 1.0
 import PropertyMaker 1.0
 
 Item {
@@ -48,49 +46,51 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 20
 
-            MaterialCheckBox {
+            JQCheckBox {
                 id: withThreadSafeCheckBox
                 anchors.verticalCenter: parent.verticalCenter
+                width: 100
                 text: "线程安全"
                 checked: false
             }
 
-            MaterialTextField {
+            JQText {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "类名："
+            }
+
+            JQTextField {
                 id: classNameTextField
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: -22
                 width: 200
-                placeholderText: "类名"
                 text: "MyClass"
             }
 
-            MaterialButton {
+            JQButton {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "生成代码"
+                text: "生成"
 
                 onClicked: {
                     if ( !propertyMaker.make() )
                     {
-                        materialUI.showSnackbarMessage( "生成失败" );
+                        JQGlobal.showMessage( "生成失败" );
                         return;
                     }
 
-                    materialUI.showSnackbarMessage( "生成成功" );
+                    JQGlobal.showMessage( "生成成功" );
                 }
             }
         }
 
-        MaterialLabel {
+        JQText {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Q_PROPERTY代码"
         }
 
-        RectangularGlow {
+        JQPane {
             width: parent.width
             height: ( propertyMaker.height - 150 ) / 3 - 5
-            glowRadius: 6
-            spread: 0.22
-            color: "#20000000"
+            padding: 0
 
             Rectangle {
                 anchors.fill: parent
@@ -128,17 +128,15 @@ Q_PROPERTY( int age READ age WRITE setAge )"
             }
         }
 
-        MaterialLabel {
+        JQText {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "生成的代码"
         }
 
-        RectangularGlow {
+        JQPane {
             width: parent.width
             height: ( propertyMaker.height - 150 ) / 3 - 5
-            glowRadius: 6
-            spread: 0.22
-            color: "#20000000"
+            padding: 0
 
             Rectangle {
                 anchors.fill: parent
@@ -173,12 +171,10 @@ Q_PROPERTY( int age READ age WRITE setAge )"
             }
         }
 
-        RectangularGlow {
+        JQPane {
             width: parent.width
-            height: ( propertyMaker.height - 150 ) / 3 - 5
-            glowRadius: 6
-            spread: 0.22
-            color: "#20000000"
+            height: ( propertyMaker.height - 150 ) / 3 - 10
+            padding: 0
 
             Rectangle {
                 anchors.fill: parent

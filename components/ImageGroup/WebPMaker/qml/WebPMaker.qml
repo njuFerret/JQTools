@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of JQTools
 
     Project introduce: https://github.com/188080501/JQTools
@@ -11,9 +11,8 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/Interface/"
+import QtQuick.Controls 2.15
+import JQControls 1.0
 import WebPMaker 1.0
 
 Item {
@@ -22,6 +21,7 @@ Item {
     height: 540
 
     property bool changingFlag: true
+    property bool loadingVisible: false
 
     Component.onCompleted: {
         changingFlag = false;
@@ -33,7 +33,7 @@ Item {
         onMakeStart: {
             buttonForChooseImage.enabled = false;
             buttonForChooseDirectory.enabled = false;
-            materialUI.showSnackbarMessage( "开始转换图片" );
+            JQGlobal.showMessage( "开始转换图片" );
 
             listModelForNodes.clear();
             for ( var index = 0; index < fileList.length; ++index )
@@ -49,11 +49,11 @@ Item {
         onMakeEnd: {
             buttonForChooseImage.enabled = true;
             buttonForChooseDirectory.enabled = true;
-            materialUI.showSnackbarMessage( "转换图片完成" );
+            JQGlobal.showMessage( "转换图片完成" );
         }
     }
 
-    MaterialLabel {
+    JQText {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: 22
@@ -62,11 +62,10 @@ Item {
         horizontalAlignment: Text.AlignHCenter
     }
 
-    MaterialButton {
+    JQButton {
         id: buttonForChooseImage
         x: 254
         width: 120
-        height: 40
         text: "选择图片"
         anchors.horizontalCenterOffset: 34
         anchors.horizontalCenter: parent.horizontalCenter
@@ -74,25 +73,24 @@ Item {
         anchors.topMargin: 105
 
         onClicked: {
-            materialUI.showLoading();
+            webPMaker.loadingVisible = true;
 
             var reply = webPMakerManage.makeWebPByOpenFiles( radioButtonForCoverOldFile.checked );
 
             switch( reply )
             {
-                case "cancel": materialUI.showSnackbarMessage( "用户取消操作" ); break;
-                case "mkdir error": materialUI.showSnackbarMessage( "创建目标文件夹失败" ); break;
+                case "cancel": JQGlobal.showMessage( "用户取消操作" ); break;
+                case "mkdir error": JQGlobal.showMessage( "创建目标文件夹失败" ); break;
             }
 
-            materialUI.hideLoading();
+            webPMaker.loadingVisible = false;
         }
     }
 
-    MaterialButton {
+    JQButton {
         id: buttonForChooseDirectory
         x: 254
         width: 120
-        height: 40
         text: "选择文件夹"
         anchors.horizontalCenterOffset: 190
         anchors.horizontalCenter: parent.horizontalCenter
@@ -100,26 +98,26 @@ Item {
         anchors.topMargin: 105
 
         onClicked: {
-            materialUI.showLoading();
+            webPMaker.loadingVisible = true;
 
             var reply = webPMakerManage.makeWebPByOpenDirectory( radioButtonForCoverOldFile.checked );
 
             switch( reply )
             {
-                case "cancel": materialUI.showSnackbarMessage( "用户取消操作" ); break;
-                case "empty": materialUI.showSnackbarMessage( "所选文件夹不包含png或jpg图片" ); break;
-                case "mkdir error": materialUI.showSnackbarMessage( "创建目标文件夹失败" ); break;
+                case "cancel": JQGlobal.showMessage( "用户取消操作" ); break;
+                case "empty": JQGlobal.showMessage( "所选文件夹不包含png或jpg图片" ); break;
+                case "mkdir error": JQGlobal.showMessage( "创建目标文件夹失败" ); break;
             }
 
-            materialUI.hideLoading();
+            webPMaker.loadingVisible = false;
         }
     }
 
-    ExclusiveGroup {
-        id: exclusiveGroupForMode
+    ButtonGroup {
+        id: buttonGroupForMode
     }
 
-    MaterialRadioButton {
+    JQRadioButton {
         id: radioButtonForCoverOldFile
         x: 115
         text: "生成WebP文件在同目录"
@@ -127,10 +125,11 @@ Item {
         anchors.leftMargin: -270
         anchors.top: parent.top
         anchors.topMargin: 83
-        exclusiveGroup: exclusiveGroupForMode
+        width: 220
+        ButtonGroup.group: buttonGroupForMode
     }
 
-    MaterialRadioButton {
+    JQRadioButton {
         id: radioButtonForNewFile
         x: 115
         text: "转换后的图片另存到桌面"
@@ -138,7 +137,8 @@ Item {
         anchors.leftMargin: -270
         anchors.top: parent.top
         anchors.topMargin: 126
-        exclusiveGroup: exclusiveGroupForMode
+        width: 220
+        ButtonGroup.group: buttonGroupForMode
         checked: true
     }
 
@@ -171,7 +171,7 @@ Item {
                 {
                     if ( currentFilePath !== filePath ) { return; }
 
-                    progressCircleForOptimizing.indeterminate = true;
+                    progressCircleForOptimizing.opacity = 1;
                 }
 
                 function onMakeWebPFinish(currentFilePath, makeResult)
@@ -199,15 +199,11 @@ Item {
                 }
             }
 
-            RectangularGlow {
+            JQPane {
                 x: 5
                 y: 5
                 width: parent.width - 10
                 height: parent.height - 10
-                glowRadius: 4
-                spread: 0.2
-                color: "#44000000"
-                cornerRadius: 8
             }
 
             Rectangle {
@@ -218,7 +214,7 @@ Item {
                 color: "#ffffff"
             }
 
-            MaterialLabel {
+            JQText {
                 id: labelForFileName
                 x: 16
                 anchors.verticalCenter: parent.verticalCenter
@@ -227,7 +223,7 @@ Item {
                 elide: Text.ElideRight
             }
 
-            MaterialLabel {
+            JQText {
                 id: labelForOriginalSize
                 anchors.right: progressCircleForOptimizing.left
                 anchors.rightMargin: 25
@@ -235,20 +231,21 @@ Item {
                 text: originalSize
             }
 
-            MaterialProgressCircle {
+            JQLoadingIndicator {
                 id: progressCircleForOptimizing
                 x: 360
                 anchors.verticalCenter: parent.verticalCenter
                 width: 32
                 height: 32
-                indeterminate: false
-                autoChangeColor: true
+                indicatorSize: 32
+                running: true
+                showText: false
                 visible: opacity !== 0
 
                 Behavior on opacity { NumberAnimation { duration: 300 } }
             }
 
-            MaterialLabel {
+            JQText {
                 id: labelForCompressionRatio
                 anchors.centerIn: progressCircleForOptimizing
                 width: 32
@@ -262,7 +259,7 @@ Item {
                 Behavior on opacity { NumberAnimation { duration: 300 } }
             }
 
-            MaterialLabel {
+            JQText {
                 id: labelForResultSize
                 anchors.left: progressCircleForOptimizing.right
                 anchors.leftMargin: 25
@@ -274,7 +271,7 @@ Item {
                 Behavior on opacity { NumberAnimation { duration: 300 } }
             }
 
-            MaterialLabel {
+            JQText {
                 id: labelForTimeConsuming
                 anchors.left: progressCircleForOptimizing.right
                 anchors.leftMargin: 95
@@ -306,17 +303,33 @@ Item {
 
             if ( filePaths.length === 0 ) { return; }
 
-            materialUI.showLoading();
+            webPMaker.loadingVisible = true;
 
             var reply = webPMakerManage.makeWebPByFilePaths( radioButtonForCoverOldFile.checked, filePaths );
 
             switch( reply )
             {
-                case "cancel": materialUI.showSnackbarMessage( "用户取消操作" ); break;
-                case "mkdir error": materialUI.showSnackbarMessage( "创建目标文件夹失败" ); break;
+                case "cancel": JQGlobal.showMessage( "用户取消操作" ); break;
+                case "mkdir error": JQGlobal.showMessage( "创建目标文件夹失败" ); break;
             }
 
-            materialUI.hideLoading();
+            webPMaker.loadingVisible = false;
+        }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        z: 999
+        visible: webPMaker.loadingVisible
+        color: "#55000000"
+
+        JQLoadingIndicator {
+            anchors.centerIn: parent
+            text: "处理中..."
+        }
+
+        MouseArea {
+            anchors.fill: parent
         }
     }
 }

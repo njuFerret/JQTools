@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of JQTools
 
     Project introduce: https://github.com/188080501/JQTools
@@ -11,9 +11,7 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/Interface/"
+import JQControls 1.0
 import RsaCrypt 1.0
 
 Item {
@@ -24,7 +22,7 @@ Item {
     property bool changingFlag: false
     property int panelLabelHeight: 24
     property int panelLabelBottomMargin: 8
-    property int panelTopMargin: 130
+    property int panelTopMargin: 140
     property int panelSpacing: 36
     property int panelBottomMargin: 10
     property int panelAreaHeight: height - panelTopMargin - panelBottomMargin - panelSpacing * 2
@@ -62,110 +60,110 @@ Item {
         onErrorStringChanged: {
             if ( rsaCryptManage.errorString().length > 0 )
             {
-                materialUI.showSnackbarMessage( rsaCryptManage.errorString() );
+                JQGlobal.showMessage( rsaCryptManage.errorString() );
             }
         }
     }
 
-    MaterialButton {
-        x: 10
-        y: 10
-        width: 120
-        text: qsTr("公钥加密")
+    Column {
+        anchors.left: parent.left
+        anchors.leftMargin: 10
+        anchors.top: parent.top
+        anchors.topMargin: 8
+        spacing: -2
 
-        onClicked: {
-            rsaCryptManage.publicKeyEncryptToBase64();
-            if ( rsaCryptManage.errorString().length === 0 )
-            {
-                materialUI.showSnackbarMessage( qsTr("RSA 公钥加密成功") );
+        Row {
+            spacing: 10
+
+            JQButton {
+                width: 130
+                text: qsTr("公钥加密")
+
+                onClicked: {
+                    rsaCryptManage.publicKeyEncryptToBase64();
+                    if ( rsaCryptManage.errorString().length === 0 )
+                    {
+                        JQGlobal.showMessage( qsTr("RSA 公钥加密成功") );
+                    }
+                }
+            }
+
+            JQButton {
+                width: 130
+                text: qsTr("私钥解密")
+
+                onClicked: {
+                    rsaCryptManage.privateKeyDecryptFromBase64();
+                    if ( rsaCryptManage.errorString().length === 0 )
+                    {
+                        JQGlobal.showMessage( qsTr("RSA 私钥解密成功") );
+                    }
+                }
+            }
+
+            JQButton {
+                width: 130
+                text: qsTr("输出覆盖输入")
+
+                onClicked: {
+                    rsaCryptManage.moveTargetToSource();
+                }
+            }
+
+            JQButton {
+                width: 130
+                text: qsTr("清空全部")
+
+                onClicked: {
+                    rsaCryptManage.clear();
+                }
+            }
+        }
+
+        Row {
+            spacing: 10
+
+            JQButton {
+                width: 130
+                text: qsTr("粘贴输入")
+
+                onClicked: {
+                    rsaCryptManage.pasteSource();
+                }
+            }
+
+            JQButton {
+                width: 130
+                text: qsTr("粘贴密钥")
+
+                onClicked: {
+                    rsaCryptManage.pasteKeyPem();
+                }
+            }
+
+            JQButton {
+                width: 130
+                text: qsTr("复制输出")
+
+                onClicked: {
+                    rsaCryptManage.copyTarget();
+                    JQGlobal.showMessage( qsTr("已将输出内容复制到剪贴板") );
+                }
+            }
+
+            JQButton {
+                width: 130
+                text: qsTr("复制密钥")
+
+                onClicked: {
+                    rsaCryptManage.copyKeyPem();
+                    JQGlobal.showMessage( qsTr("已将密钥复制到剪贴板") );
+                }
             }
         }
     }
 
-    MaterialButton {
-        x: 140
-        y: 10
-        width: 120
-        text: qsTr("私钥解密")
-
-        onClicked: {
-            rsaCryptManage.privateKeyDecryptFromBase64();
-            if ( rsaCryptManage.errorString().length === 0 )
-            {
-                materialUI.showSnackbarMessage( qsTr("RSA 私钥解密成功") );
-            }
-        }
-    }
-
-    MaterialButton {
-        x: 270
-        y: 10
-        width: 120
-        text: qsTr("输出覆盖输入")
-
-        onClicked: {
-            rsaCryptManage.moveTargetToSource();
-        }
-    }
-
-    MaterialButton {
-        x: 400
-        y: 10
-        width: 100
-        text: qsTr("清空全部")
-
-        onClicked: {
-            rsaCryptManage.clear();
-        }
-    }
-
-    MaterialButton {
-        x: 10
-        y: 54
-        width: 100
-        text: qsTr("粘贴输入")
-
-        onClicked: {
-            rsaCryptManage.pasteSource();
-        }
-    }
-
-    MaterialButton {
-        x: 120
-        y: 54
-        width: 100
-        text: qsTr("粘贴密钥")
-
-        onClicked: {
-            rsaCryptManage.pasteKeyPem();
-        }
-    }
-
-    MaterialButton {
-        x: 230
-        y: 54
-        width: 100
-        text: qsTr("复制输出")
-
-        onClicked: {
-            rsaCryptManage.copyTarget();
-            materialUI.showSnackbarMessage( qsTr("已将输出内容复制到剪贴板") );
-        }
-    }
-
-    MaterialButton {
-        x: 340
-        y: 54
-        width: 100
-        text: qsTr("复制密钥")
-
-        onClicked: {
-            rsaCryptManage.copyKeyPem();
-            materialUI.showSnackbarMessage( qsTr("已将密钥复制到剪贴板") );
-        }
-    }
-
-    MaterialLabel {
+    JQText {
         text: qsTr("密钥 PEM（公钥加密，私钥解密）")
         height: panelLabelHeight
         verticalAlignment: Text.AlignVCenter
@@ -175,12 +173,9 @@ Item {
         horizontalAlignment: Text.AlignHCenter
     }
 
-    RectangularGlow {
+    JQPane {
         z: -1
         anchors.fill: itemForKeyPem
-        glowRadius: 6
-        spread: 0.22
-        color: "#20000000"
     }
 
     Item {
@@ -235,7 +230,7 @@ Item {
         }
     }
 
-    MaterialLabel {
+    JQText {
         text: qsTr("输入内容（解密时请填 Base64 密文）")
         height: panelLabelHeight
         verticalAlignment: Text.AlignVCenter
@@ -245,12 +240,9 @@ Item {
         horizontalAlignment: Text.AlignHCenter
     }
 
-    RectangularGlow {
+    JQPane {
         z: -1
         anchors.fill: itemForSource
-        glowRadius: 6
-        spread: 0.22
-        color: "#20000000"
     }
 
     Item {
@@ -305,7 +297,7 @@ Item {
         }
     }
 
-    MaterialLabel {
+    JQText {
         text: qsTr("输出内容")
         height: panelLabelHeight
         verticalAlignment: Text.AlignVCenter
@@ -315,12 +307,9 @@ Item {
         horizontalAlignment: Text.AlignHCenter
     }
 
-    RectangularGlow {
+    JQPane {
         z: -1
         anchors.fill: itemForTarget
-        glowRadius: 6
-        spread: 0.22
-        color: "#20000000"
     }
 
     Item {

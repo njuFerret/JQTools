@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of JQTools
 
     Project introduce: https://github.com/188080501/JQTools
@@ -11,9 +11,7 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/Interface/"
+import JQControls 1.0
 import CaseTransform 1.0
 
 Item {
@@ -31,50 +29,56 @@ Item {
         id: caseTransformManage
     }
 
-    Item {
+    Column {
         anchors.centerIn: parent
-        width: 620
-        height: 540
+        width: 540
+        spacing: 22
 
-        MaterialTextField {
+        Row {
+            spacing: 12
+
+            JQButton {
+                width: 140
+                text: "复制到剪贴板"
+
+                onClicked: {
+                    caseTransformManage.setClipboardText( textFieldForLower.text );
+                    JQGlobal.showMessage( "小写字符串已经复制到了剪贴板" );
+                }
+            }
+
+            JQButton {
+                width: 140
+                text: "处理剪贴板"
+
+                onClicked: {
+                    textFieldForSource.text = caseTransformManage.clipboardText();
+                    caseTransformManage.setClipboardText( textFieldForLower.text );
+                    JQGlobal.showMessage( "小写字符串已经复制到了剪贴板" );
+                }
+            }
+        }
+
+        JQTextField {
             id: textFieldForLower
-            x: 40
-            y: 97
-            width: 540
+            width: parent.width
             placeholderText: "小写字符串"
             text: "abc"
         }
 
-        MaterialButton {
-            x: 40
-            y: 55
-            width: 120
-            text: "复制到剪贴板"
-
-            onClicked: {
-                caseTransformManage.setClipboardText( textFieldForLower.text );
-                materialUI.showSnackbarMessage( "小写字符串已经复制到了剪贴板" );
-            }
-        }
-
-        MaterialButton {
-            x: 166
-            y: 55
+        JQButton {
             width: 140
-            text: "处理剪贴板内容"
+            text: "从剪贴板粘贴"
 
             onClicked: {
                 textFieldForSource.text = caseTransformManage.clipboardText();
-                caseTransformManage.setClipboardText( textFieldForLower.text );
-                materialUI.showSnackbarMessage( "小写字符串已经复制到了剪贴板" );
+                JQGlobal.showMessage( "已从剪贴板粘贴源字符串" );
             }
         }
 
-        MaterialTextField {
+        JQTextField {
             id: textFieldForSource
-            x: 40
-            y: 247
-            width: 540
+            width: parent.width
             placeholderText: "源字符串"
             text: "Abc"
 
@@ -90,50 +94,36 @@ Item {
             }
         }
 
-        MaterialButton {
-            x: 40
-            y: 205
-            width: 120
-            text: "从剪贴板粘贴"
+        Row {
+            spacing: 12
 
-            onClicked: {
-                textFieldForSource.text = caseTransformManage.clipboardText();
-                materialUI.showSnackbarMessage( "已从剪贴板粘贴源字符串" );
+            JQButton {
+                width: 140
+                text: "复制到剪贴板"
+
+                onClicked: {
+                    caseTransformManage.setClipboardText( textFieldForUpper.text );
+                    JQGlobal.showMessage( "大写字符串已经复制到了剪贴板" );
+                }
+            }
+
+            JQButton {
+                width: 140
+                text: "处理剪贴板"
+
+                onClicked: {
+                    textFieldForSource.text = caseTransformManage.clipboardText();
+                    caseTransformManage.setClipboardText( textFieldForUpper.text );
+                    JQGlobal.showMessage( "大写字符串已经复制到了剪贴板" );
+                }
             }
         }
 
-        MaterialTextField {
+        JQTextField {
             id: textFieldForUpper
-            x: 40
-            y: 403
-            width: 540
+            width: parent.width
             placeholderText: "大写字符串"
             text: "ABC"
-        }
-
-        MaterialButton {
-            x: 40
-            y: 361
-            width: 120
-            text: "复制到剪贴板"
-
-            onClicked: {
-                caseTransformManage.setClipboardText( textFieldForUpper.text );
-                materialUI.showSnackbarMessage( "大写字符串已经复制到了剪贴板" );
-            }
-        }
-
-        MaterialButton {
-            x: 166
-            y: 361
-            width: 140
-            text: "处理剪贴板内容"
-
-            onClicked: {
-                textFieldForSource.text = caseTransformManage.clipboardText();
-                caseTransformManage.setClipboardText( textFieldForUpper.text );
-                materialUI.showSnackbarMessage( "大写字符串已经复制到了剪贴板" );
-            }
         }
     }
 }

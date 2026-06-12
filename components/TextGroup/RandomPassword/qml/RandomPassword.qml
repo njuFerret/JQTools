@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of JQTools
 
     Project introduce: https://github.com/188080501/JQTools
@@ -11,9 +11,7 @@
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 1.4
-import QtGraphicalEffects 1.0
-import "qrc:/MaterialUI/Interface/"
+import JQControls 1.0
 import RandomPassword 1.0
 
 Item {
@@ -31,97 +29,131 @@ Item {
         id: randomPasswordManage
     }
 
-    Item {
+    Column {
         anchors.centerIn: parent
-        width: 620
-        height: 540
+        width: 540
+        spacing: 16
 
-        MaterialLabel {
-            x: 40
-            y: 132
-            text: "密码长度："
+        Row {
+            spacing: 10
+
+            JQText {
+                text: qsTr( "密码长度：" )
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            JQTextField {
+                id: textFieldForLength
+                width: 60
+                maximumLength: 3
+                validator: IntValidator { bottom: 0 }
+                text: "11"
+            }
         }
 
-        MaterialTextField {
-            id: textFieldForLength
-            x: 116
-            y: 91
-            width: 50
-            characterLimit: 2
-            characterLimitVisible: false
-            validator: RegExpValidator{ regExp: /^([0-9]+)$/ }
-            text: "15"
+        Grid {
+            columns: 3
+            columnSpacing: 20
+            rowSpacing: 10
+
+            JQCheckBox {
+                id: checkBoxForNumber
+                text: qsTr( "允许数字" )
+                checked: true
+            }
+
+            JQCheckBox {
+                id: checkBoxForEnglishCharacters
+                text: qsTr( "允许英文字符" )
+                checked: true
+            }
+
+            JQCheckBox {
+                id: checkBoxForIncludeUppercaseLetters
+                text: qsTr( "包含大写字母" )
+                checked: true
+                enabled: checkBoxForEnglishCharacters.checked
+            }
+
+            JQCheckBox {
+                id: checkBoxForDividingLine
+                text: qsTr( "插入分割线" )
+                checked: true
+            }
+
+            JQCheckBox {
+                id: checkBoxForSpecialCharacters
+                text: qsTr( "允许特殊字符" )
+                checked: false
+            }
+
+            JQCheckBox {
+                id: checkBoxForExcludeAmbiguousCharacters
+                text: qsTr( "排除易混淆字符" )
+                checked: false
+            }
         }
 
-        MaterialTextField {
+        JQCheckBox {
+            id: checkBoxForEnsureEachSelectedType
+            width: 190
+            text: qsTr( "每类至少一个字符" )
+            checked: true
+        }
+
+        JQTextField {
+            id: textFieldForCustomSpecialCharacters
+            width: parent.width
+            placeholderText: qsTr( "特殊字符集" )
+            text: "!@#$%^&*()-_=+[]{}:,.?"
+            enabled: checkBoxForSpecialCharacters.checked
+        }
+
+        Row {
+            spacing: 12
+
+            JQButton {
+                width: 120
+                text: qsTr( "随机密码" )
+
+                onClicked: {
+                    var randomPasswordString = randomPasswordManage.randomPassword(
+                                    parseInt( textFieldForLength.text ),
+                                    checkBoxForNumber.checked,
+                                    checkBoxForEnglishCharacters.checked,
+                                    checkBoxForIncludeUppercaseLetters.checked,
+                                    checkBoxForSpecialCharacters.checked,
+                                    textFieldForCustomSpecialCharacters.text,
+                                    checkBoxForExcludeAmbiguousCharacters.checked,
+                                    checkBoxForEnsureEachSelectedType.checked,
+                                    checkBoxForDividingLine.checked
+                                );
+                    if ( randomPasswordString === "" )
+                    {
+                        JQGlobal.showMessage( qsTr( "生成失败，请检查长度和选项配置" ) );
+                        return;
+                    }
+
+                    textFieldForPassword.text = randomPasswordString;
+                    JQGlobal.showMessage( qsTr( "随机密码已经生成" ) );
+                }
+            }
+
+            JQButton {
+                width: 140
+                text: qsTr( "复制到剪贴板" )
+
+                onClicked: {
+                    randomPasswordManage.setClipboardText( textFieldForPassword.text );
+                    JQGlobal.showMessage( qsTr( "密码已经复制到了剪贴板" ) );
+                }
+            }
+        }
+
+        JQTextField {
             id: textFieldForPassword
-            x: 40
-            y: 317
-            width: 540
-            placeholderText: "随机密码"
-        }
-
-        MaterialCheckBox {
-            id: checkBoxForNumber
-            x: 34
-            y: 181
-            text: "允许数字"
-            checked: true
-        }
-
-        MaterialCheckBox {
-            id: checkBoxForEnglishCharacters
-            x: 154
-            y: 181
-            text: "允许英文字符"
-            checked: true
-        }
-
-        MaterialCheckBox {
-            id: checkBoxForIncludeUppercaseLetters
-            x: 302
-            y: 181
-            text: "包含大写字母"
-            checked: true
-            enabled: checkBoxForEnglishCharacters.checked
-        }
-
-        MaterialCheckBox {
-            id: checkBoxForDividingLine
-            x: 436
-            y: 181
-            text: "插入分割线"
-            checked: true
-        }
-
-        MaterialButton {
-            x: 40
-            y: 259
-            width: 120
-            text: "随机密码"
-
-            onClicked: {
-                textFieldForPassword.text = randomPasswordManage.randomPassword(
-                                parseInt( textFieldForLength.text ),
-                                checkBoxForNumber.checked,
-                                checkBoxForEnglishCharacters.checked,
-                                checkBoxForIncludeUppercaseLetters.checked,
-                                checkBoxForDividingLine.checked
-                            );
-                materialUI.showSnackbarMessage( "随机密码已经生成" );
-            }
-        }
-
-        MaterialButton {
-            x: 166
-            y: 259
-            width: 120
-            text: "复制到剪贴板"
-
-            onClicked: {
-                randomPasswordManage.setClipboardText( textFieldForPassword.text );
-                materialUI.showSnackbarMessage( "密码已经复制到了剪贴板" );
-            }
+            width: parent.width
+            placeholderText: qsTr( "随机密码" )
         }
     }
 }
